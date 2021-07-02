@@ -32,4 +32,4 @@ You need to have AMPL installed with a valid licence. As soon as AMPL is install
  
 ## License
 
-This project is licensed under the BSD v3 or later - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the BSD v3 or later - see the [LICENSE.md](LICENSE.md) file for details.
