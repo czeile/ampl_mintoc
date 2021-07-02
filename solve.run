@@ -1,0 +1,138 @@
+#
+# This file is part of ampl_mintoc.
+#
+# Copyright 2021, Sebastian Sager, Manuel Tetschke, Clemens Zeile
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. 
+#
+# ampl_mintoc is free software: you can redistribute it and/or modify
+# it under the terms of the BSD-style License
+#
+# ampl_mintoc is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+#
+
+##########
+if (mode=="Relaxed") then {
+	printf"\n*** RELAXED PROBLEM: ";
+## another hack for PVschedule, sorry...
+#	let filename_ext := "Relaxed";
+	problem Relaxed;
+	let slack := 0;
+	let opttype := "NLP";
+	include ../set.run;
+}
+#####
+else if (mode=="Fixed") then {
+	printf"\n*** FIXED BINARIES: ";
+	problem Fixed;
+	let opttype := "NLP";
+	include ../set.run;
+}
+#####
+else if (mode=="MeritFixed") then {
+	printf"\n*** FIXED BINARIES AND MERIT OBJECTIVE: ";
+	problem MeritFixed;
+	let opttype := "NLP";
+	include ../set.run;
+}
+#####
+else if (mode=="Implicit") then {
+	printf"\n*** IMPLICIT PROBLEM: ";
+	let filename_ext := "Implicit";
+	problem Implicit;
+	let slack := 0;
+	let opttype := "NLP";
+	include ../set.run;
+}
+#####
+else if (mode=="STO") then {
+	printf"\n*** STO PROBLEM: ";
+	let filename_ext := "STO";
+	problem STO;
+	let opttype := "NLP";
+	include ../set.run;
+}
+#####
+# Bug: need to declare w binary, but this messes up presolver for other modes
+else if (mode=="MINLP") then {
+	printf"\n*** FULL MINLP Solution: ";
+	let filename_ext := "MINLP";
+	problem Relaxed;
+	let opttype := "MINLP";
+	include ../set.run;
+}
+#####
+else if (mode=="Simulate") then {
+	printf"\n*** SIMULATION OF STATES AND LIFTED VARIABLES: ";
+	problem Sim;
+	let slack := 0;
+	let opttype := "NLP";
+	include ../set.run;
+}
+#####
+else if (mode=="SimulateSTO") then {
+	printf"\n*** STO SIMULATION OF STATES AND LIFTED VARIABLES: ";
+	problem SimSTO;
+	let slack := 0;
+	let opttype := "NLP";
+	include ../set.run;
+}
+#####
+else if (mode=="SimulateRelVC") then {
+	printf"\n*** SIMULATION OF STATES AND LIFTED VARIABLES with Relaxed Vanishing Constraints: ";
+	problem SimRelVC;
+	let slack := 0;
+	let opttype := "NLP";
+	include ../set.run;
+}
+#####
+else if (mode=="Init") then {
+	printf"\n*** \n *** INITIALIZATION OF LIFTED VARIABLES: ";
+	problem Init;
+	let opttype := "NLP";
+	include ../set.run;
+}
+else {
+	printf "Unknown mode %s in solve.run. Exiting.\n", mode;
+	exit;
+}
+##########
+
+
+if ( isSOS1 == 0) then { drop SOS1; }
+if      (vstrategy=="OC") then { let nvco := 1; }	
+else if (vstrategy=="nothing") then { let nvco := 0; }
+else let nvco := no;
+
+include ../checkConsistency.run;
+
+# Vorsicht: problemspezifischer hack fuer PVschedule und PVestimate. Fuer andere Anwendungen wieder auskommentieren!
+#for {i in IU diff ALLOWED} fix wi[1,i];
+solve;
+
+##########
+if (mode=="Relaxed" || mode=="Implicit") then {
+	if (match (solve_message, "infeasible") > 0) or (match (solve_message, "too many") > 0) then {
+		printf "Relaxed problem could not be solved. Exiting.\n";
+		exit;
+	}
+	# Copy results to auxiliary variables
+
+	for {o in Omega, i in IU} { let alpha[o,i] := wi[o,i]; }
+	for {k in X, i in IU diff {0}} { let lambda [k,i] := ( ode[k,(i*ntperu) div ntperel, (i*ntperu) mod ntperel + 1] ); }
+	for {k in X} { let lambda [k,0] := lambda [k,1]; }
+	for {k in X, o in 0..no, i in I} { let frel[k,o,i] := f[k,o,i]; }
+}
+#####
+if (mode=="STO") then {
+	if (match (solve_message, "infeasible") > 0) or (match (solve_message, "too many") > 0) then {
+		printf "STO problem could not be solved. Exiting.\n";
+		exit;
+	}
+}
+##########
+

@@ -1,0 +1,86 @@
+#
+# This file is part of ampl_mintoc.
+#
+# Copyright 2021, Sebastian Sager, Manuel Tetschke, Clemens Zeile
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. 
+#
+# ampl_mintoc is free software: you can redistribute it and/or modify
+# it under the terms of the BSD-style License
+#
+# ampl_mintoc is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+#
+
+
+if (integrator!="implicitEuler" && 
+    integrator!="explicitEuler" &&
+    integrator!="radau3" ) then {
+	printf "Unknown integrator %s. Exiting.\n", integrator;
+	exit;
+}
+
+if (nlpsolver!="knitro" && 
+    nlpsolver!="minos" &&
+    nlpsolver!="snopt" &&
+    nlpsolver!="conopt" &&
+    nlpsolver!="ipopt" ) then {
+	printf "Unknown nlpsolver %s. Exiting.\n", nlpsolver;
+	exit;
+}
+
+if (minlpsolver!="knitro" && 
+    minlpsolver!="bonmin" &&
+    minlpsolver!="couenne" &&
+    minlpsolver!="minotaur" &&
+    minlpsolver!="baron" ) then {
+	printf "Unknown minlpsolver %s. Exiting.\n", minlpsolver;
+	exit;
+}
+
+if (milpsolver!="gurobi" && 
+    milpsolver!="express" &&
+    milpsolver!="cplex" &&
+    milpsolver!="cbc" &&
+    milpsolver!="scip" ) then {
+	printf "Unknown milpsolver %s. Exiting.\n", milpsolver;
+	exit;
+}
+
+if ( nt mod ntperu != 0 ) then {
+	printf "nt needs to be a multiple of ntperu. Current values are %d and %d. Exiting.\n", nt, ntperu;
+	exit;
+}
+
+if ( nt mod ntperel != 0 ) then {
+	printf "nt needs to be a multiple of ntperel. Current values are %d and %d. Exiting.\n", nt, ntperel;
+	exit;
+}
+
+if ( mode == "STO" && isSOS1==1 && ntperu mod no != 0 ) then {
+	printf "ntperu needs to be a multiple of no for STO (isSOS1=1). Current values are %d and %d. Exiting.\n", ntperu, no;
+	exit;
+}
+
+if ( mode == "STO" && isSOS1==0 && ntperu mod (no+1) != 0 ) then {
+	printf "ntperu needs to be a multiple of no+1 for STO (isSOS1=0). Current values are %d and %d. Exiting.\n", ntperu, no+1;
+	exit;
+}
+
+if ( mode == "STO" && nsto mod ntperel != 0 ) then {
+	printf "nsto needs to be a multiple of ntperel for STO.\nCurrent values are nsto = ntperu / (no+1-isSOS1) = %d / (%d+1-%d) = %d and ntperel=%d. Exiting.\n", ntperu, no, isSOS1, nsto, ntperel;
+	exit;
+}
+
+if (vstrategy!="OC" && 
+    vstrategy!="bigM" &&
+    vstrategy!="VC" &&
+    vstrategy!="nothing" &&
+    vstrategy!="IC" ) then {
+	printf "Unknown vstrategy %s. Exiting.\n", vstrategy;
+	exit;
+}
+

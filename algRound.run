@@ -1,0 +1,118 @@
+#
+# This file is part of ampl_mintoc.
+#
+# Copyright 2021 Sebastian Sager, Manuel Tetschke, Clemens Zeile
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. 
+#
+# ampl_mintoc is free software: you can redistribute it and/or modify
+# it under the terms of the BSD-style License
+#
+# ampl_mintoc is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+#
+
+
+
+#
+# Different rounding strategies, including Sum Up Rounding
+# Open: non-equidistant grid, isSOS1=0 for no>1 (rounding then on implicit mode)
+# Note: counters ooo and iii, because solve.run is included within a loop
+#
+
+### Output
+if (mode=="Round") then {
+	printf "***** SIMPLE ROUNDING";
+	let filename_ext := "Round";
+}
+else if (mode=="SUR") then {
+	printf "***** SUM UP ROUNDING";
+	let filename_ext := "SUR";
+}
+else if (mode=="Roundresolve") then {
+	printf "***** SIMPLE ROUNDING WITH RESOLVE";
+	let filename_ext := "Roundresolve";
+}
+else if (mode=="SURresolve") then {
+	printf "***** SUM UP ROUNDING WITH RESOLVE";
+	let filename_ext := "SURresolve";
+}
+else {
+	printf "Unknown mode %s in algRound.run. Exiting.\n", mode;
+	exit;
+}
+
+if (isSOS1==1) then printf " (SOS1 version) *****\n";
+else printf " *****\n";
+
+### Algorithm
+
+# Initialize SUR slack variables
+for {j in Omega} { let mys[j] := 0; }
+let mysum := 0;
+
+# When successive performing of SUR and (scaled) CIA:
+ for {ooo in Omega, iii in IU} { let wi[ooo,iii] := alpha[ooo,iii]; }
+
+# Loop on time
+for {iii in IU} { 
+
+	if (mode=="Round" || mode=="Roundresolve") then {
+		# Simple Rounding with SOS1
+		if (isSOS1==1) then {
+			let myidx := 1;
+			for {ooo in Omega diff {1}} { 
+				if wi[ooo,iii] > wi[myidx,iii] then let myidx:=ooo;
+			}
+			# Perform rounding
+			for {ooo in Omega diff {myidx}} { let wi[ooo,iii] := 0; }
+			let wi[myidx,iii] := 1;
+		}
+		# Simple Rounding without SOS1
+		else {
+			for {ooo in Omega} { 
+				if wi[ooo,iii] < 0.5 then let wi[ooo,iii] := 0;
+				else let wi[ooo,iii] := 1;
+			}
+		}
+	}
+	else if (mode=="SUR" || mode=="SURresolve") then {
+		# Sum Up Rounding with SOS1
+		if (isSOS1==1) then {
+			# Update and compare accumulated values
+			for {ooo in Omega} { let mys[ooo] := mys[ooo] + wi[ooo, iii]; }
+			let myidx := 1;
+			for {ooo in Omega diff {1}} { 
+				if mys[ooo] > mys[myidx] then let myidx:=ooo;
+			}
+
+			# Perform rounding
+			for {ooo in Omega diff {myidx}} { let wi[ooo,iii] := 0; }
+			let wi[myidx,iii] := 1;
+			let mys[myidx] := mys[myidx] - 1;	
+		}
+		# Sum Up Rounding without SOS1
+		else {
+			for {ooo in Omega} { 
+				let mys[ooo] := mys[ooo] + wi[ooo, iii];
+				if (mys[ooo] < 0.5) then let wi[ooo,iii] := 0;
+				else let wi[ooo,iii] := 1;
+				let mys[ooo] := mys[ooo] - wi[ooo,iii];
+			}
+		}
+	}
+
+	if (mode=="Roundresolve" || mode=="SURresolve") then {
+		for {ooo in Omega} { fix wi[ooo,iii]; }
+		let tempvar := mode;
+		let mode := "Relaxed";
+		include ../solve.run;	
+		let mode := tempvar;
+	}
+}
+
+unfix w;
+

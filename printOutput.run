@@ -1,0 +1,28 @@
+#
+# This file is part of ampl_mintoc.
+#
+# Copyright 2021, Sebastian Sager, Manuel Tetschke, Clemens Zeile
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. 
+#
+# ampl_mintoc is free software: you can redistribute it and/or modify
+# it under the terms of the BSD-style License
+#
+# ampl_mintoc is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+#
+
+
+printf "-----------------------------\n";
+display objective, _total_solve_time;
+printf "fractionality: %f %f\n", max{i in IU, o in Omega} (0.5 - abs(wi[o,i] - 0.5)), sum{i in IU, o in Omega} (0.5 - abs(wi[o,i] - 0.5)) / no;
+printf "relaxation of VC: %f \n", slack;
+for {k in 1..nvc} {
+	printf "max violation of VC%d: %f\n", k, (max(0,max{i in IC, o in Omega} ( (vcon[k,0,i] + vcon[k,o,i])*w[o,i] )));
+}
+printf "Switching value of w: %f \n", sum{i in 1..ntu-1} max{o in Omega} abs(wi[o,i] - wi[o,i-1]);
+printf "-----------------------------\n";
+

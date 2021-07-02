@@ -1,0 +1,88 @@
+##############################
+model ../mintocPre.mod;
+model ../calcium/calcium.mod;
+model ../mintocPost.mod;
+data ../calcium/calcium.dat;
+##############################
+
+let nlpsolver := "ipopt";
+
+##### EXPORT #########
+
+param myfile {0..10} symbolic;
+
+let myfile[10] := "out/calciumpocncr_1024.txt";
+let myfile[9] := "out/calciumpocncr_512.txt";
+let myfile[8] := "out/calciumpocncr_256.txt";
+let myfile[7] := "out/calciumpocncr_128.txt";
+let myfile[6] := "out/calciumpocncr_64.txt";
+let myfile[5] := "out/calciumpocncr_32.txt";
+let myfile[4] := "out/calciumpocncr_16.txt";
+let myfile[3] := "out/calciumpocncr_8.txt";
+let myfile[2] := "out/calciumpocncr_4.txt";
+let myfile[1] := "out/calciumpocncr_2.txt";
+let myfile[0] := "out/calciumpocncr_1.txt";
+
+param mycommonfile symbolic;
+let mycommonfile := "out/calciumpocncr.txt";
+printf "\n" >> (mycommonfile);
+##############################
+let nt := 102400;
+param myfact; 
+
+var obj_1;
+var obj_2;
+var S := 1000;
+var ncr := 0;
+option randseed 0;
+
+let mode := "Simulate";
+let integrator := "explicitEuler";
+
+var w_mid {0..2^10};
+
+for {it in 0..10} {
+	let ncr := 0;
+	let myfact := 2^it;
+	let ntperu := nt / myfact;
+
+	printf "\n" > (myfile[it]);
+	for {it1 in 1..S} {
+	display it1;
+		# draw random 2^it dimensional point and compute obj
+		for {it2 in 0..2^it-1} {
+			let wi[1,it2] := Uniform(0,1);
+			let w_mid[it2] := wi[1,it2];
+			#printf "%lg ", wi[1,it2] >> (myfile[it]);
+		}
+		include ../solve.run;
+		printf "%g\n", objective >> (myfile[it]);
+		let obj_1 := objective;
+
+		# draw second random 2^it dimensional point and compute obj
+		for {it2 in 0..2^it-1} {
+			let wi[1,it2] := Uniform(0,1);
+			let w_mid[it2] := (w_mid[it2] + wi[1,it2])/2;
+			#printf "%lg ", wi[1,it2] >> (myfile[it]);
+		}
+		include ../solve.run;
+		printf "%g\n", objective >> (myfile[it]);
+		let obj_2 := objective;
+		printf "%lg\n", (obj_1+obj_2)/2 >> (myfile[it]);
+
+		# use midpoint and compute obj
+		for {it2 in 0..2^it-1} {
+			let wi[1,it2] := w_mid[it2];
+			#printf "%lg ", wi[1,it2] >> (myfile[it]);
+		}		
+		include ../solve.run;
+		printf "%g\n", objective >> (myfile[it]);
+		if (obj_1 + obj_2 > 2*objective) then let ncr := ncr + 1; 
+		printf "\n" >> (myfile[it]);
+	}	
+	let ncr := ncr/S;
+	printf "\n\n ncr = %lg", 1 - ncr >> (myfile[it]);
+	printf "%lg %g\n", 2^it, 1-ncr >> (mycommonfile);
+}
+
+

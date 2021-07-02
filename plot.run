@@ -1,0 +1,219 @@
+#
+# This file is part of ampl_mintoc.
+#
+# Copyright 2021, Sebastian Sager, Manuel Tetschke, Clemens Zeile
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. 
+#
+# ampl_mintoc is free software: you can redistribute it and/or modify
+# it under the terms of the BSD-style License
+#
+# ampl_mintoc is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+#
+
+
+
+################
+### Gnuplot file
+################
+
+let filename := ("res/" & filename_base & ".plot");
+
+### Header only once
+if (plottedbefore == 0) then {
+	let plottedbefore := 1;
+
+	printf "# Automatically generated gnuplot file\n" > (filename); 
+	printf "set terminal postscript eps color\n" >> (filename); 
+	# Be careful: gnuplot <4.6: linetype, gnuplot >5.0: dashtype
+	printf "set style line 1 dashtype 1 linewidth 4 linecolor rgb 'grey'\n" >> (filename); 
+	printf "set style line 2 dashtype 2 linewidth 4 linecolor rgb 'grey'\n" >> (filename); 
+	printf "set style line 3 dashtype 3 linewidth 4 linecolor rgb 'grey'\n" >> (filename); 
+	printf "set style line 4 dashtype 1 linewidth 4 linecolor rgb 'black'\n" >> (filename); 
+	printf "set style line 5 dashtype 2 linewidth 4 linecolor rgb 'black'\n" >> (filename); 
+	printf "set style line 6 dashtype 3 linewidth 4 linecolor rgb 'black'\n\n" >> (filename); 
+	printf "set pm3d map corners2color c1\n" >> (filename); 
+	printf "unset colorbox\n" >> (filename); 
+	printf "set palette gray negative\n\n" >> (filename); 
+	printf "set xlabel '%s'\n" , plot_xlabel >> (filename); 
+}
+
+### Single postscript files
+for {pl in PLOT} {
+	let myidx := 0;
+	printf "set title '%s'\n", plot_title[pl] >> (filename);
+	printf "set output '%s'\n", ("res/" & filename_base & filename_ext & "_" & pl & ".ps") >> (filename);
+	printf "splot " >> (filename);
+	
+	### Special SOS plot for controls w?
+	if (plotsos == pl) then {
+		if (myidx==0) then { let myidx := 1; }
+		else { printf ", " >> (filename); }
+		printf "'%s' using 1:2:3 t '%s'", ("res/" & filename_base & filename_ext & "_w.txt"), (plotsos_name) >> (filename);
+	}
+	### Differential states
+	for {k in 1..min(maxplot,nxd): plotx[k] == pl} {
+		if (myidx==0) then { let myidx := 1; }
+		else { printf ", " >> (filename); }
+		printf "'%s' using 1:%d:(0.0) t '%s' w l ls %d", ("res/" & filename_base & filename_ext & ".txt"), 1+k, (plotx_name[k]), ((k-1) mod 3 + 1) >> (filename);
+	}
+	### Algebraic states
+	for {k in 1..min(maxplot,nxa): plotxa[k] == pl} {
+		if (myidx==0) then { let myidx := 1; }
+		else { printf ", " >> (filename); }
+		printf "'%s' using 1:%d:(0.0) t '%s' w l ls %d", ("res/" & filename_base & filename_ext & ".txt"), nxd+1+k, (plotxa_name[k]), ((k-1) mod 3 + 1) >> (filename);
+	}
+	### Controls u
+	for {k in 1..min(maxplot,nu): plotu[k] == pl} {
+		if (myidx==0) then { let myidx := 1; }
+		else { printf ", " >> (filename); }
+		printf "'%s' using 1:%d:(0.0) t '%s' w l ls %d", ("res/" & filename_base & filename_ext & ".txt"), nxd+nxa+1+k, (plotu_name[k]), ((k-1) mod 3 + 4) >> (filename);
+	}
+	### Controls w
+	for {k in 1..min(maxplot,no): plotw[k] == pl} {
+		if (myidx==0) then { let myidx := 1; }
+		else { printf ", " >> (filename); }
+		printf "'%s' using 1:%d:(0.0) t '%s' w l ls %d", ("res/" & filename_base & filename_ext & ".txt"), nxd+nxa+nu+1+k, (plotw_name[k]), ((k-1) mod 3 + 4) >> (filename);
+	}
+	### Constraints con
+	for {k in 1..min(maxplot,nc): plotcon[k] == pl} {
+		if (myidx==0) then { let myidx := 1; }
+		else { printf ", " >> (filename); }
+		printf "'%s' using 1:%d:(0.0) t '%s' w l ls %d", ("res/" & filename_base & filename_ext & "_con.txt"), 1+k, (plotcon_name[k]), ((k-1) mod 3 + 4) >> (filename);
+	}
+	### Vanishing Constraints vc
+	for {k in 1..min(maxplot,nvc), oj in Omega: plotvc[k,oj] == pl} {
+		if (myidx==0) then { let myidx := 1; }
+		else { printf ", " >> (filename); }
+		printf "'%s' using 1:%d:(0.0) t '%s' w l ls %d", ("res/" & filename_base & filename_ext & "_con.txt"), 1+nc+((k-1)*nvco)+oj, (plotvc_name[k,oj]), ((k+oj-1) mod 3 + 4) >> (filename);
+	}
+	### Difference to reference solution
+	if (referencestored==1) then for {k in 1..min(maxplot,nxd): plotrefx[k] == pl} {
+		if (myidx==0) then { let myidx := 1; }
+		else { printf ", " >> (filename); }
+		printf "'%s' using 1:%d:(0.0) t '%s' w l ls %d", ("res/" & filename_base & filename_ext & "_dev.txt"), 1+k, (plotrefx_name[k]), ((k-1) mod 3 + 4) >> (filename);
+	}
+	### Normed Difference to reference solution
+	if (referencestored==1 && plotrefxnorm == pl) then { # only one normed difference , already chosen via mode for algGBaunds.run
+		if (myidx==0) then { let myidx := 1; }
+		else { printf ", " >> (filename); }
+		printf "'%s' using 1:%d:(0.0) t '%s' w l ls %d", ("res/" & filename_base & filename_ext & "_dev.txt"), 1+nxd+1, (plotrefxnorm_name & mode), ((1-1) mod 3 + 1) >> (filename);
+	}
+	### Dual variables
+	for {k in 1..min(maxplot,nxd): plotlambda[k] == pl} {
+		if (myidx==0) then { let myidx := 1; }
+		else { printf ", " >> (filename); }
+		printf "'%s' using 1:%d:(0.0) t '%s' w l ls %d", ("res/" & filename_base & filename_ext & "_dual.txt"), 1+k, (plotlambda_name[k]), ((k-1) mod 3 + 4) >> (filename);
+	}
+	# Workaround to avoid error message in gnuplot concerning empty plot instructions
+	if (myidx == 0) then printf "1" >> (filename);
+	printf "\n\n" >> (filename);
+}
+
+close filename;
+
+##############
+### Data files
+##############
+
+### Normal case, no switching time optimization
+if (mode != "STO" && mode != "SimulateSTO") then {
+	# States and controls
+	for {i in I} { 
+		printf "%f ", i*dt > ("res/" & filename_base & filename_ext & ".txt"); 
+		for {k in X}  { printf "%lg ", x[k,i] > ("res/" & filename_base & filename_ext & ".txt"); }
+		for {k in XA} { printf "%lg ", xa[k,i] > ("res/" & filename_base & filename_ext & ".txt"); }
+		for {o in U}  { printf "%lg ", u[o,i] > ("res/" & filename_base & filename_ext & ".txt"); }
+		for {o in Omega} { printf "%lg ", w[o,i] > ("res/" & filename_base & filename_ext & ".txt"); }
+		printf "\n" > ("res/" & filename_base & filename_ext & ".txt"); 
+	}
+
+	for {i in IC, k in 1..2: k==1 || i == nt} {
+		for{o in Omega} { printf "%f %f %lg\n", i*dt, o, w[o,i] > ("res/" & filename_base & filename_ext & "_w.txt"); }
+		printf "%f %f 0\n\n", i*dt, no+1 > ("res/" & filename_base & filename_ext & "_w.txt");
+	}
+
+	# Constraints and Vanishing Constraints
+	for {i in IC} { 
+		printf "%f ", i*dt > ("res/" & filename_base & filename_ext & "_con.txt"); 
+		for {k in C} { printf "%lg ", con[k,i] > ("res/" & filename_base & filename_ext & "_con.txt"); }
+		for {k in VC} { printf "%lg ", max(0,max{oj in Omega} (w[oj,i]*(vcon[k,0,i] + vcon[k,oj,i]))) > ("res/" & filename_base & filename_ext & "_con.txt"); }
+		printf "\n" > ("res/" & filename_base & filename_ext & "_con.txt");
+	}
+
+	# Dual variables
+	# Hint: variables discontinuous on IU grid because of objective (Lagrange)
+	for {i in ICOLL} { 
+		printf "%f ", (i*ntperel)*del > ("res/" & filename_base & filename_ext & "_dual.txt"); 
+		for {k in X} { printf "%lg ", ode[k,i,ntperel] > ("res/" & filename_base & filename_ext & "_dual.txt"); }
+		printf "\n" > ("res/" & filename_base & filename_ext & "_dual.txt");
+	}
+	# Blank line at the end, further plots will be disconnected
+	printf "\n" > ("res/" & filename_base & filename_ext & ".txt"); 
+}
+### Special for switching time optimization
+else { 
+	# States and controls
+	let ti := 0;
+	for {i in IU, o in 1..no+(1-isSOS1), ii in ICOLLSTO, j in JCOLL} { 
+		if (o<=no) then { let mywval := wi[o,i]; }
+		else            { let mywval := 1-sum{l in Omega} wi[l,i]; }
+
+		if (mywval > 1e-3) then {
+			printf "%f ", ti > ("res/" & filename_base & filename_ext & ".txt"); 
+			for {k in X} { printf "%lg ", x[k,i*ntperu+(o-1)*nsto+ii*ntperel+j] > ("res/" & filename_base & filename_ext & ".txt"); }
+			for {k in XA} { printf "%lg ", xa[k,i*ntperu+(o-1)*nsto+ii*ntperel+j] > ("res/" & filename_base & filename_ext & ".txt"); }
+			for {ku in U} { printf "%lg ", u[ku,i] > ("res/" & filename_base & filename_ext & ".txt"); }
+			for {oj in Omega} {
+				if (o==oj) then printf "1 " > ("res/" & filename_base & filename_ext & ".txt");
+				else printf "0 " > ("res/" & filename_base & filename_ext & ".txt");
+			}
+			if (o==no+1) then printf "1 " > ("res/" & filename_base & filename_ext & ".txt");
+			else if (isSOS1==0) then printf "0 " > ("res/" & filename_base & filename_ext & ".txt");
+			printf "\n" > ("res/" & filename_base & filename_ext & ".txt"); 
+
+			# w values in separate file for image plot
+			for {oj in Omega} { 
+					if (o==oj) then printf "%f %f 1\n", ti, oj > ("res/" & filename_base & filename_ext & "_w.txt");
+					else            printf "%f %f 0\n", ti, oj > ("res/" & filename_base & filename_ext & "_w.txt");
+			}
+			if (o==no+1)        then printf "%f %f 1\n", ti, no+1 > ("res/" & filename_base & filename_ext & "_w.txt");
+			else if (isSOS1==0) then printf "%f %f 0\n", ti, no+1 > ("res/" & filename_base & filename_ext & "_w.txt");
+			printf "%f %f 0\n\n", ti, no+2-isSOS1 > ("res/" & filename_base & filename_ext & "_w.txt");
+		}
+		let ti := ti + dt*(no+1-isSOS1)*mywval;
+	}
+	# last time point separately
+	for {oj in 1..no+1-isSOS1} { printf "%f %f 1\n", ti, oj > ("res/" & filename_base & filename_ext & "_w.txt"); }
+
+	# Constraints and Vanishing Constraints
+	for {i in IC} { 
+		printf "%f ", i*dt > ("res/" & filename_base & filename_ext & "_con.txt"); 
+###		for {k in C} { printf "%lg ", con[k,i] > ("res/" & filename_base & filename_ext & "_con.txt"); }
+		for {k in VC, oj in VCO} { printf "%lg ", w[oj,i]*(vcon[k,0,i] + vcon[k,oj,i]) > ("res/" & filename_base & filename_ext & "_con.txt"); }
+		printf "\n" > ("res/" & filename_base & filename_ext & "_con.txt");
+	}
+
+	# Dual variables
+	let ti := 0;
+	for {i in IU, o in 1..no+(1-isSOS1), ii in ICOLLSTO} { 
+		if (o<=no) then { let mywval := wi[o,i]; }
+		else            { let mywval := 1-sum{l in Omega} wi[l,i]; }
+
+		if (mywval > 1e-3) then {
+			printf "%f ", ti > ("res/" & filename_base & filename_ext & "_dual.txt"); 
+			for {k in X} { printf "%lg ", ode_STO[k,o,i,ii,ntperel] > ("res/" & filename_base & filename_ext & "_dual.txt"); }
+			printf "\n" > ("res/" & filename_base & filename_ext & "_dual.txt");
+		}
+		let ti := ti + del*(no+1-isSOS1)*mywval;
+	}
+
+	# Blank line at the end, further plots will be disconnected
+	printf "\n" > ("res/" & filename_base & filename_ext & ".txt"); 
+}
+
+

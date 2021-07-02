@@ -1,0 +1,43 @@
+##############################
+model ../mintocPre.mod;
+model lotka.mod;
+model ../mintocPost.mod;
+data lotka.dat;
+##############################
+
+let nlpsolver := "ipopt";
+
+##############################
+let nt := 48000;
+let ntperu := 24000;
+
+let mode := "SimulateSTO";
+printf "\n" > out/lotkasto2d.txt;
+for {w1 in 0..1 by 0.01} {
+for {w2 in 0..1 by 0.01} {
+display w1, w2;
+	let wi[1,0] := w1;
+	let wi[1,1] := w2;
+	let integrator := "explicitEuler";
+	include ../solve.run;
+	printf "%lg %g %g\n", w1, w2, objective >> out/lotkasto2d.txt;
+}
+printf "\n" >> out/lotkasto2d.txt;
+}
+
+##############################
+let mode := "Simulate";
+printf "\n" > out/lotkapoc2d.txt;
+for {w1 in 0..1 by 0.01} {
+for {w2 in 0..1 by 0.01} {
+display w1, w2;
+	let wi[1,0] := w1;
+	let wi[1,1] := w2;
+	let integrator := "explicitEuler";
+	include ../solve.run;
+	printf "%lg %g %g\n", w1, w2, objective >> out/lotkapoc2d.txt;
+}
+printf "\n" >> out/lotkapoc2d.txt;
+}
+
+

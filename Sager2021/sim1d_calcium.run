@@ -1,0 +1,47 @@
+##############################
+param myfact;
+param myfile {0..5} symbolic;
+
+model ../mintocPre.mod;
+model ../calcium/calcium.mod;
+model ../mintocPost.mod;
+data ../calcium/calcium.dat;
+
+##############################
+
+let nlpsolver := "ipopt";
+
+let myfile[3] := "out/calciumsto1d_128.txt";
+let myfile[2] := "out/calciumsto1d_64.txt";
+let myfile[1] := "out/calciumsto1d_32.txt";
+let myfile[0] := "out/calciumsto1d_16.txt";
+
+##############################
+let nt := 96000;
+let integrator := "explicitEuler";
+
+let mode := "SimulateSTO";
+for {it in 0..3} {
+	let myfact := 2^(it+4);
+
+	let ntperu := nt / myfact;
+
+	printf "\n" > (myfile[it]);
+	for {w1 in 0..1 by 0.01} {
+		let {i in IU} wi[1,i] := w1;
+		include ../solve.run;
+		printf "%lg %g\n", w1, objective >> (myfile[it]);
+	}
+}
+
+##############################
+# nt needs to be twice as high for STO to get the same result for w=0 and w=1
+let ntperu := nt;
+let mode := "Simulate";
+printf "\n" > out/calciumpoc1d.txt;
+for {w1 in 0..1 by 0.01} {
+	let {i in IU} wi[1,i] := w1;
+	include ../solve.run;
+	printf "%lg %g\n", w1, objective >> out/calciumpoc1d.txt;
+}
+

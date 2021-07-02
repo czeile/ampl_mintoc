@@ -1,0 +1,160 @@
+#
+# This file is part of ampl_mintoc.
+#
+# Copyright 2021 Sebastian Sager, Manuel Tetschke, Clemens Zeile
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. 
+#
+# ampl_mintoc is free software: you can redistribute it and/or modify
+# it under the terms of the BSD-style License
+#
+# ampl_mintoc is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+#
+
+
+#
+# Different Branch & Bound strategies (by Jung, Sager), 
+# Open: * non-equidistant grid
+#	* initialization of open nodes with -1-depth-node and if-check inside loop -> could be done also outside
+#	* switching and vanishing constraints, simulation of x-trajectory: comments inlines, challenge to transfer constraints to fixed-time point if-checks.
+#	* seperate files for BB and scaledBB?
+# Note: * new parameters in mintocPre and mintocPost -> couls be also included here, when mintocPre gets to large
+
+
+### Branch and Bound parameters
+
+let Nmax:=2000000;
+## Set up the first branch and bound tree node
+let theta[1]		    		:=-1e+30;
+let d_BB[1]				:=-1;
+let Iter				:= 0;
+let Inext				:= 2;
+let Ibest           			:= -1;                              ## No best global upper bound so far
+let open_problems			:={1};
+
+### Output
+
+printf "***** SIMPLE Branch&Bound";
+let filename_ext := "BB";
+
+
+if (isSOS1==1) then printf " (SOS1 version) *****\n";
+else printf " *****\n";
+
+
+
+###################################################
+### Algorithm: Approximate the relaxed soluton: CIA with BB
+
+let bestGlobalUpper 			:= max(max {i in Omega diff {1}} sum {j in U} alpha[i,j] , sum {j in U} (1-alpha[1,j]));
+
+## Main loop solving the list of open subproblems
+repeat while card (open_problems) > 0 {
+	
+	let Iter:=Iter+1;
+	##### Search strategy, here: best-first search
+	# Find node with minimal theta
+	let theta_argmin := { i in open_problems: theta[i] = min{j in open_problems} theta[j]};
+	if (card(theta_argmin)>1) then 								#If several minimal nodes (reg. theta) exist, choose the deepest
+		{let theta_d_argmin := { i in theta_argmin: d_BB[i] = max{j in theta_argmin} d_BB[j]};
+		 let Iprob := first (theta_d_argmin);}
+	else {let Iprob := first(theta_argmin);}
+	######
+	
+	let open_problems := open_problems diff {Iprob};
+
+        ###### if: all control intervals passed, stop!
+	if (d_BB[Iprob]==ntu) then{
+			let Ibest:=Iprob;
+			let bestGlobalUpper:=theta[Iprob];
+			break;
+			}
+	######	
+	else { 	#Create child nodes
+
+		#print "";
+		#print "Current theta ", theta[Iprob], "Global ", bestGlobalUpper, "Tree level ", d_BB[Iprob];
+
+		if (isSOS1==1) then {
+			for {i in Omega}{ 
+				let d_BB[Inext]:=d_BB[Iprob]+1;
+				let omega_BB[i, d_BB[Inext], Inext]		 :=1; 
+				let {j in Omega: j<>i} omega_BB[j,d_BB[Inext],Inext]:=0;			
+				if(d_BB[Iprob]==-1) then {
+
+					#get the initial x-values: how to apply re_constraints on x_BB?  var re{k in RE}=0...
+					#maybe via new problem consisting only of re_constraints and then x_BB=x
+
+					#if switching and VC fulfilled: 
+					#maybe via new problem consisting only of v_constraints, sw_constraints for time zero, variables sw&vcon 
+					let theta[Inext]:=max {k in Omega} abs(omega_BB[k,0,Inext]-alpha[k,0]);
+					let open_problems := open_problems union {Inext};
+					let Inext := last(open_problems) + 1;					
+				}
+				else{
+					#simulation of next x_BB: create problem consisting just of ode{k in X, i in ICOLL, j in JCOLL}, but with fixed time (only one step)
+
+					#if switching and VC fulfilled: 
+					#maybe via new problem consisting only of v_constraints, sw_constraints for fixed time, variables sw(x_BB)&vcon
+ 
+					let {k in Omega, j in 0..d_BB[Inext]-1} omega_BB[k,j,Inext]:=omega_BB[k,j,Iprob]; #set omega_BB	
+					let theta[Inext]:=max(theta[Iprob], max {k in Omega} abs(sum{j in 0..min(d_BB[Inext],ntu-1)}(omega_BB[k,j,Inext]-alpha[k,j])));	
+					let open_problems := open_problems union {Inext};
+					let Inext := last(open_problems) + 1;	
+					#let x_BB[d[Inext]*ntperu,k,Inext] := x_BB[d[Inext]*ntperu,k,Iprob];	(for k in X)
+				} #else
+						
+				
+			}#for Omega-Loop
+			}#if SOS1-loop
+	
+		else { # no SOS1 condition, all permutations of omega
+			  for {ii in 0..2^no-1}{
+				 for {i in Omega}{ 
+					let d_BB[Inext]:=d_BB[Iprob]+1;
+					let omega_BB[i,d_BB[Inext],Inext]:= ii / 2^(i-1) mod 2;
+
+					if(d_BB[Iprob]==-1) then {
+
+						#get the initial x-values: how to apply re_constraints on x_BB?  var re{k in RE}=0...
+						#maybe via new problem consisting only of re_constraints and then x_BB=x
+
+						#if switching and VC fulfilled: 
+						#maybe via new problem consisting only of v_constraints, sw_constraints for time zero, variables sw&vcon 
+						let theta[Inext]:=max {k in Omega} abs(omega_BB[k,0,Inext]-alpha[k,0]);
+						let open_problems := open_problems union {Inext};
+						let Inext := last(open_problems) + 1;					
+					}
+					else{
+						#simulation of next x_BB: create problem consisting just of ode{k in X, i in ICOLL, j in JCOLL}, but with fixed time (only one step)
+
+						#if switching and VC fulfilled: 
+						#maybe via new problem consisting only of v_constraints, sw_constraints for fixed time, variables sw(x_BB)&vcon
+ 
+						let {k in Omega, j in 0..d_BB[Inext]-1} omega_BB[k,j,Inext]:=omega_BB[k,j,Iprob]; #set omega_BB	
+						let theta[Inext]:=max(theta[Iprob], max {k in Omega} abs(sum{j in 0..min(d_BB[Inext],ntu-1)}(omega_BB[k,j,Inext]-alpha[k,j])));	
+						let open_problems := open_problems union {Inext};
+						let Inext := last(open_problems) + 1;	
+						#let x_BB[d[Inext]*ntperu,k,Inext] := x_BB[d[Inext]*ntperu,k,Iprob];	(for k in X)
+					} #else
+				}#for Omega-Loop
+				}#for ii loop	
+			}#else no SOS1			
+	    }#else
+	}#while
+	
+
+## Print information about the best integer solution found
+#print "#### Total number of subproblems      = ", Inext-1;
+#print "#### Number of Iterations	     = ", Iter;
+#print "#### Best global upper bound          = ", bestGlobalUpper;
+#print "#### Given by subproblem #            = ", Ibest;
+#print "#### Controls p 			=", {i in Omega, j in U} p[i,j,Ibest];
+
+# For simulation with binary controls:
+for {o in Omega, i in IU} { let wi[o,i] := omega_BB[o,i,Ibest]; }
+

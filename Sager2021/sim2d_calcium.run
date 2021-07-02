@@ -1,0 +1,43 @@
+
+##############################
+model ../mintocPre.mod;
+model ../calcium/calcium.mod;
+model ../mintocPost.mod;
+data ../calcium/calcium.dat;
+##############################
+
+let nlpsolver := "ipopt";
+
+##############################
+let nt := 96000;
+let ntperu := 48000;
+
+let mode := "SimulateSTO";
+for {w1 in 0..1 by 0.01} {
+for {w2 in 0..1 by 0.01} {
+display w1, w2;
+	let wi[1,0] := w1;
+	let wi[1,1] := w2;
+	let integrator := "explicitEuler";
+	include ../solve.run;
+	printf "%lg %g %g\n", w1, w2, objective >> out/calciumsto2d.txt;
+}
+printf "\n" >> out/calciumsto2d.txt;
+}
+
+##############################
+let mode := "Simulate";
+printf "\n" > out/calciumpoc2d.txt;
+for {w1 in 0..1 by 0.01} {
+for {w2 in 0..1 by 0.01} {
+display w1, w2;
+	let wi[1,0] := w1;
+	let wi[1,1] := w2;
+	let integrator := "explicitEuler";
+	include ../solve.run;
+	printf "%lg %g %g\n", w1, w2, objective >> out/calciumpoc2d.txt;
+}
+printf "\n" >> out/calciumpoc2d.txt;
+}
+
+

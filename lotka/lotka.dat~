@@ -1,0 +1,40 @@
+# ------------------------------------
+# Data: Lotka Volterra fishing problem
+# ------------------------------------
+
+# Dimensions, all other 0 by default
+param nxd := 2;
+param no := 1;
+param nre := 2;
+
+# Algorithmic parameters
+param nt := 4800;
+param ntperu := 50;
+
+# Problem parameters
+let T := 12.0;
+
+let p[1] := 0.4;
+let p[2] := 0.2;
+let ref[1] := 1.0;
+let ref[2] := 1.0;
+
+# Initial values control
+let {i in IU} wi[1,i] := 0.3;
+
+# Plot names
+let nplots := 5;
+let filename_base := "lotka";
+let plotx_name[1] := "Prey";
+let plotx_name[2] := "Predator";
+let plotw_name[1] := "Fishing control";
+let plotx[1] := 1;
+let plotx[2] := 1;
+let plotw[1] := 1;
+for {k in 1..nxd} { let plotlambda[k] := 2; }
+
+#let {k in X} plotrefx[k] := 3;
+#let plotrefxnorm := 4;
+#let plotGB := 5;
+#let {k in X, o in Omega} plotfrel[k,o] := 4;
+#let {k in X} plotetax[k] := 5;

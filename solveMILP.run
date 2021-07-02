@@ -1,0 +1,99 @@
+#
+# This file is part of ampl_mintoc.
+#
+# Copyright 2021, Sebastian Sager, Manuel Tetschke, Clemens Zeile
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. 
+#
+# ampl_mintoc is free software: you can redistribute it and/or modify
+# it under the terms of the BSD-style License
+#
+# ampl_mintoc is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+#
+
+
+#
+# Different Combinatorial integral approximation problems including scaled MILPs
+# Note: Generally, CIAs could be extended further with switching constraints
+
+let dummyMilpSolve :=0;
+
+#Default zero for Milp-Variables:
+for {i in IU, o in Omega} { let omega[o,i] := 0; } for {k in X, i in IU} { let eta_x[k,i] := 0; } let eta := 0;
+
+
+### Output
+if (mode=="CIA") then {
+	printf "***** COMBINATORIAL INTEGRAL APPROXIMATION *****\n";
+	let filename_ext := "CIA";
+	let dummyMilpSolve :=1;
+}
+else if (mode=="CIAReverse") then {
+	printf "***** CIA1 Reverse *****\n";
+	let filename_ext := "CIAReverse";
+	let dummyMilpSolve :=1;
+}
+else if (mode=="CIA1norm") then {
+	printf "***** CIA with 1 NORM *****\n";
+	let filename_ext := "CIA1norm";
+	let dummyMilpSolve :=1;
+}
+else if (mode=="CIA1normReverse") then {
+	printf "***** CIA with 1 NORM Reverse *****\n";
+	let filename_ext := "CIA1normReverse";
+	let dummyMilpSolve :=1;
+}
+else if (mode=="ScaledCIAmax") then {
+	printf "***** ScaledCIAmax *****\n";
+	let filename_ext := "ScaledCIAmax";
+		let dummyMilpSolve :=1;
+}
+else if (mode=="ScaledCIA2") then {
+	printf "***** SCALED CIA2 *****\n";
+	let filename_ext := "ScaledCIA2";
+	let dummyMilpSolve :=1;
+}
+else {
+	printf "Unknown mode %s in solveMILP.run. Exiting.\n", mode;
+	exit;
+}
+
+
+### Algorithm
+
+if (mode=="CIA") then {
+ 		problem milpCIA;
+}
+else if (mode=="CIAReverse") then {
+ 		problem milpCIAReverse;
+}
+else if (mode=="CIA1norm") then {
+ 		problem milpCIA1norm;
+}
+else if (mode=="CIA1normReverse") then {
+ 		problem milpCIA1normReverse;
+}
+else if (mode=="ScaledCIAmax") then {
+ 		problem milpScaledCIAmax;
+}
+else if (mode=="ScaledCIA2") then {
+ 		problem milpScaledCIA2;
+}
+
+
+if (	dummyMilpSolve == 1) then {
+
+option relax_integrality 0;
+let opttype := "MILP";
+include ../set.run;
+solve;
+
+}
+
+# Update binary variables with found omegas for simulation
+for {o in Omega, i in IU} { let wi[o,i] := omega[o,i]; }
+

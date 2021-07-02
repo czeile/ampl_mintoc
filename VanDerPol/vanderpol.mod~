@@ -1,0 +1,55 @@
+# -------------------------------
+# Model: batch reactor model, Mintoc.de, Clemens Zeile 2017
+# Outer Convexification version
+# -------------------------------
+
+
+
+# Problem specific functions
+# Note: scaled to  \in {0,1}
+var f {k in X,o in 0..no,i in I} = (
+	if      (k==1 && o==0) then x[2,i] 
+	else if (k==2 && o==0) then -x[1,i]
+	else if (k==2 && o==1) then -1*(1-(x[1,i])^2)*x[2,i]
+	else if (k==2 && o==2) then 0.75*(1-(x[1,i])^2)*x[2,i]
+	else 0
+);
+
+var lagrange{i in IC} = (x[1,i]^2+x[2,i]^2); #+w[1,i]^2
+
+
+var re{k in RE} = (
+	if           (k==1)   then x[1,0]  - 1
+	else if      (k==2)   then x[2,0]  - 0
+);
+
+
+
+# -----------------------------------------
+# Unused modeling parts
+
+
+var mayer = 0;
+
+
+var ri {k in RI} = (
+	if      (k==1) then x[1,0]
+);
+
+var xa {k in XA, i in I} = (
+	if      (k==1) then x[1,i]
+);
+
+var con {k in C, i in IC} = (
+	if      (k==1) then x[1,i]
+);
+
+var vcon {k in VC, o in 0..no, i in IC} = (
+	if      (k==1) then x[1,i]
+);
+
+var sw{o in Omega, i in IC diff {nt}, k in 1..nsw} = (
+	if      (k==1) then x[1,i] - 0.8
+	else if (k==2) then 1.4 - x[1,i]
+);
+

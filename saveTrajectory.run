@@ -1,0 +1,33 @@
+#
+# This file is part of ampl_mintoc.
+#
+# Copyright 2021, Sebastian Sager, Manuel Tetschke, Clemens Zeile
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. 
+#
+# ampl_mintoc is free software: you can redistribute it and/or modify
+# it under the terms of the BSD-style License
+#
+# ampl_mintoc is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+#
+
+
+
+printf "Saving trajectory to file %s.\n", "res/save" & mode & ".txt";
+
+printf "\n" > ("res/save" & mode & ".txt");
+for {iu in U, i in IU} { printf "%16.16f\t", ui[iu,i] >> ("res/save" & mode & ".txt"); }
+
+printf "\n" >> ("res/save" & mode & ".txt");
+for {o in Omega, i in IU} { printf "%16.16f\t", wi[o,i] >> ("res/save" & mode & ".txt"); }
+
+printf "\n" >> ("res/save" & mode & ".txt");
+for {k in X, i in I} { printf "%16.16f\t", x[k,i] >> ("res/save" & mode & ".txt"); }
+
+printf "\n" >> ("res/save" & mode & ".txt");
+for {k in Q} { printf "%16.16f\t", q[k] >> ("res/save" & mode & ".txt"); }
+

@@ -1,0 +1,33 @@
+
+##############################
+model ../mintocPre.mod;
+model ../calcium/calcium.mod;
+model ../mintocPost.mod;
+data ../calcium/calcium.dat;
+##############################
+
+let nlpsolver := "ipopt";
+let integrator := "explicitEuler";
+let wi[1,0] := 1;
+let wi[1,1] := 1;
+
+##############################
+let nt := 12000;
+let ntperu := 6000;
+
+for {1..4} {
+	let nt := nt*2;
+	let ntperu := ntperu*2;
+	display nt;
+	
+	let mode := "SimulateSTO";
+	include ../solve.run;
+	printf "%lg Calcium STO %g\n", nt, objective >> out/table1_calcium.txt;
+	
+	let mode := "Simulate";
+	include ../solve.run;
+	printf "%lg Calcium POC %g\n", nt, objective >> out/table1_calcium.txt;
+}
+
+
+
