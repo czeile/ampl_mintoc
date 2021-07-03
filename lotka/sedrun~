@@ -1,9 +1,0 @@
-sed -i s/'param nt      > 0;'/'#param nt      > 0;'/g ../dummysed
-#sed -i s/'param ntperu'/'#param ntperu'/g ../dummysed
-
-
-
-
-#sed -i s/'#param nt'/'param nt'/g ../dummysed
-#sed -i s/'#param ntperu'/'param ntperu'/g ../dummysed
-
