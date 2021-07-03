@@ -1,0 +1,42 @@
+#
+# This file is part of ampl_mintoc.
+#
+# Copyright 2021, Sebastian Sager, Manuel Tetschke, Clemens Zeile
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. 
+#
+# ampl_mintoc is free software: you can redistribute it and/or modify
+# it under the terms of the BSD-style License
+#
+# ampl_mintoc is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+#
+
+
+# ----------------------------------------------------
+# Electric car problem with collocation
+# (c) Sebastian Sager, Frederic Messine 2013
+# ----------------------------------------------------
+ 
+# Algorithmic parameters
+param nt := 1000;
+param ntperu := 1;
+ 
+# Problem parameters
+param R_bot := 0.05;
+param V_alim := 150;
+param R_m := 0.03;
+param K_m := 0.27;
+param L_m := 0.05;
+param r := 0.33;
+param K_r := 10;
+param M := 250;
+param g := 9.81;
+param K_f := 0.03;
+param rho := 1.293;
+param S := 2;
+param C_x := 0.4;
+param T := 10.0;

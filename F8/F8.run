@@ -1,0 +1,56 @@
+#
+# This file is part of ampl_mintoc.
+#
+# Copyright 2021, Sebastian Sager, Manuel Tetschke, Clemens Zeile
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. 
+#
+# ampl_mintoc is free software: you can redistribute it and/or modify
+# it under the terms of the BSD-style License
+#
+# ampl_mintoc is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+#
+
+
+##############################
+model ../mintocPre.mod;
+model F8.mod;
+model ../mintocPost.mod;
+data F8.dat;
+##############################
+
+let nlpsolver := "ipopt";
+
+##############################
+#let integrator := "explicitEuler";
+#let mode := "Simulate";
+#include ../solve.run;
+let integrator := "radau3";
+
+##############################
+let mode := "Relaxed";
+include ../solve.run;
+include ../plot.run;
+include ../printOutput.run;
+
+#exit;
+
+##############################
+let mode := "SUR";
+include ../algRound.run;
+let mode := "Simulate";
+include ../solve.run;
+let filename_ext := "SUR";
+include ../plot.run;
+include ../printOutput.run;
+
+###############################
+let mode := "STO";
+include ../solve.run;
+include ../plot.run;
+include ../printOutput.run;
+

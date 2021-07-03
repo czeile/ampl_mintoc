@@ -1,0 +1,62 @@
+#
+# This file is part of ampl_mintoc.
+#
+# Copyright 2021, Sebastian Sager, Manuel Tetschke, Clemens Zeile
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. 
+#
+# ampl_mintoc is free software: you can redistribute it and/or modify
+# it under the terms of the BSD-style License
+#
+# ampl_mintoc is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+#
+
+
+# -------------------------------
+# Data: Goddart's rocket problem, Mintoc.de, Clemens Zeile 2017
+# -------------------------------
+
+# Dimensions, all other 0 by default
+param nxd := 3;
+param no := 1;
+param nre := 4;
+param nc := 1;
+
+
+# Algorithmic parameters
+param nt := 3600;
+param ntperu := 20;
+
+# Problem parameters
+
+let T := 0.175;
+
+let r_0 := 1;
+let v_0 := 0;
+let m_0 := 1;
+let r_T := 1.01;
+let b_god := 7;
+let T_max := 3.5;
+let A_god := 310;
+let k_god := 500;
+let C_god := 0.6;
+
+
+# Initial values control
+#let {i in IU} wi[1,i] := 0.9;
+option randseed 10;
+let {i in IU} wi[1,i] := Uniform01();
+
+# Plot names
+let nplots := 2;
+let filename_base := "goddart";
+let plotx[1] := 1;
+let plotx[2] := 1;
+let plotx[3] := 1;
+let plotw[1] := 1;
+for {k in 1..nxd} { let plotlambda[k] := 2; }
+

@@ -1,0 +1,49 @@
+#
+# This file is part of ampl_mintoc.
+#
+# Copyright 2021, Sebastian Sager, Manuel Tetschke, Clemens Zeile
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. 
+#
+# ampl_mintoc is free software: you can redistribute it and/or modify
+# it under the terms of the BSD-style License
+#
+# ampl_mintoc is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+#
+
+
+
+##############################
+model ../mintocPre.mod;
+model calcium.mod;
+model ../mintocPost.mod;
+data calcium.dat;
+##############################
+let nlpsolver := "ipopt";
+let integrator := "explicitEuler";
+#let {i in IU} wi[1,i] := 0.1;
+##############################
+
+##############################
+#let mode := "Relaxed";
+#include ../readTrajectory.run;
+let mode := "Simulate";
+include ../solve.run;
+display objective;
+#let mode := "Relaxed";
+#let mode := "STO";
+#include ../solve.run;
+#include ../saveTrajectory.run;
+include ../plot.run;
+
+
+
+
+
+#for {o in Omega, i in IU} { let alpha[o,i] := wi[o,i]; }  # hack
+#display du*(-0.5*lagrange[0] - 0.5*lagrange[nt] + sum{i in IC} lagrange[i]) +  mayer;
+

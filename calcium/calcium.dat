@@ -1,0 +1,79 @@
+#
+# This file is part of ampl_mintoc.
+#
+# Copyright 2021, Sebastian Sager, Manuel Tetschke, Clemens Zeile
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. 
+#
+# ampl_mintoc is free software: you can redistribute it and/or modify
+# it under the terms of the BSD-style License
+#
+# ampl_mintoc is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+#
+
+
+
+# ------------------------------------
+# Data: Calcium Problem (from Mintoc.de)
+# ------------------------------------
+
+# Dimensions, all other 0 by default
+param nxd := 5;
+param no := 1;
+param nre := 5;
+
+# Algorithmic parameters
+param nt := 48000;
+param ntperu := 1000;
+#param nt := 96000;
+#param ntperu := 2000;
+
+# Problem parameters
+let T := 22.0;
+
+# Plot names
+let nplots := 2;
+let filename_base := "calcium";
+let plotx_name[1] := "x1";
+let plotx_name[2] := "x2";
+let plotx_name[3] := "x3";
+let plotx_name[4] := "x4";
+let plotw_name[1] := "w";
+for {k in 1..nxd-1} let plotx[k] := 1;
+let plotx[5] := 0;
+let plot_title[1] := "Calcium problem";
+let plotw[1] := 0;
+
+# Parameter values
+let k1 := 0.09;             # k1
+let k2 := 2.30066;          # k2
+let k3 := 0.64;             # k3
+let K4 := 0.19;             # K4
+let k5 := 4.88;             # k5
+let K6 := 1.18;             # K6
+let k7 := 2.08;             # k7
+let k8 := 32.24;            # k8
+let K9 := 29.09;            # K9
+let k10 := 5.0;             # k10
+let K11 := 2.67;            # K11
+let k12 := 0.7;             # k12
+let k13 := 13.58;           # k13
+let k14 := 153.0;           # k14
+let K15 := 0.16;            # K15
+let k16 := 4.85;            # k16
+let K17 := 0.05;            # K17
+let p18 := 1.0;             # p18
+let p1 := 100;              # p1
+
+# Reference point
+let xtilde[1] := 6.78677;     
+let xtilde[2] := 22.65836;   
+let xtilde[3] := 0.384306;    
+let xtilde[4] := 0.28977;     
+
+let ALLOWED := IU;
+
