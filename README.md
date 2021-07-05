@@ -27,7 +27,7 @@ You need to have AMPL installed with a valid licence. As soon as AMPL is install
 ## Authors
 
 * **Sebastian Sager** -  [SebastianSager](https://github.com/SebastianSager) - *sager@ovgu.de*
-* **Manuel Tetschke** -  *tetschke@ovgu.de*
+* **Manuel Tetschke** -  [tetschke](https://github.com/tetschke) -  *tetschke@ovgu.de*
 * **Clemens Zeile** -  [czeile](https://github.com/czeile) - *clemens.zeile@ovgu.de*
  
 ## License
