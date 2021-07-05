@@ -2,7 +2,7 @@
 Formulating and solving (mixed-integer) optimal control problems in AMPL
 
 ## Getting Started
-ampl_mintoc is a AMPL code for formulating and solving (mixed-integer) optimal control problems.  It consists of a set of code files that allow an efficient formulation of control problems, which are then solved by off-the-shelf NLP or MINLP solvers interfaced by AMPL.
+ampl_mintoc is an AMPL code for formulating and solving (mixed-integer) optimal control problems.  It consists of a set of code files that allow an efficient formulation of control problems, which are then solved by off-the-shelf NLP or MINLP solvers interfaced by AMPL.
 
 ### File Structure
 
@@ -16,12 +16,12 @@ ampl_mintoc was also presented in the publication [1], where the developers used
 You are very welcome to contact the the developers if you have any questions or concerns, in particular related to how to using this package.
 
 [1]: "A numerical study of transformed mixed-integer optimal control problems", Sebastian Sager, Manuel Tetschke, Clemens Zeile,
-preprint available under <opt online link> 
+preprint available under <http://www.optimization-online.org/DB_HTML/2020/03/7698.html> 
 
 ### Prerequisites and Installing
 
 You need to have AMPL installed with a valid licence. As soon as AMPL is installed, you can immediately use ampl_mintoc.
-  Depending on the optimal control problem at hand, you may want to install further solver programs than then ones coming with AMPL, such as IPOPT or Gurobi.
+  Depending on the optimal control problem at hand, you may want to install further solver programs than the ones coming with AMPL, such as IPOPT or Gurobi.
     
   
 ## Authors
