@@ -1,0 +1,85 @@
+#
+# This file is part of ampl_mintoc.
+#
+# Copyright 2021, Sebastian Sager, Manuel Tetschke, Clemens Zeile
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. 
+#
+# ampl_mintoc is free software: you can redistribute it and/or modify
+# it under the terms of the BSD-style License
+#
+# ampl_mintoc is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+#
+
+
+param problem_name symbolic := "lotka";
+
+##############################
+model ../mintocPre.mod;
+model fig10_lotka_server.mod;
+
+### Parameters needed to run iterative SUR:
+param N_param;
+param POC_var;
+param Inst_no;
+param No_occurences;
+param POC_obj;
+param STO_obj;
+param STO_nsw;
+
+param SUR_iter_k_max := 4;
+param number_of_wi := 6;
+
+set IU_pre      := 0..N_param-1;   # grid for piecewise constant controls from data
+param wi_data {Omega,IU_pre};
+
+
+model ../mintocPost.mod;
+data fig10_lotka_server.dat;
+##############################
+
+let nlpsolver := "ipopt";
+let integrator := "explicitEuler";
+
+##############################
+## prepare output file
+
+printf "N Poc_var Inst_no No_occurences POC_obj STO_obj STO_nsw Iter_k Sim_Obj nsw \n"  >> fig10_res_SUR_conv_lotka.txt;
+
+
+##############################
+## Looping over all instances
+
+for  {1..number_of_wi} {
+
+##############################
+## read controls
+
+include fig10_readControls.run;
+
+
+## Looping over all SUR_iter_k:
+for {SUR_iter_k in 0..SUR_iter_k_max} {
+
+## Create new control values based on k:
+include fig10_createControlValues.run;
+
+##############################
+let mode := "SUR";
+include ../algRound.run;
+let mode := "Simulate";
+include ../solve.run;
+let filename_ext := "SUR";
+#include ../plot.run;
+include ../printOutput.run;
+
+printf "%.9g %.9g %.9g %.9g %.9g %.9g %.9g %.9g %.9g %.9g \n", N_param,  POC_var, Inst_no, No_occurences, POC_obj, STO_obj, STO_nsw, SUR_iter_k, objective, sum{i in 1..ntu-1} max{o in Omega} abs(wi[o,i] - wi[o,i-1])  >> fig10_res_SUR_conv_lotka.txt;
+
+}
+}
+
+

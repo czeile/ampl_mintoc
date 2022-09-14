@@ -1,0 +1,79 @@
+##############################
+model ../mintocPre.mod;
+model aml.mod;
+model ../mintocPost.mod;
+data aml.dat;
+##############################
+
+let nlpsolver := "ipopt";
+
+##############################
+let integrator := "radau3";
+
+for {pat in 1..1} {
+
+	### Simulation
+	let mode := "Simulate";
+	let CHEMO := 32..34 union 44..46 union 80..82 union 92..94 union 128..130 union 140..142;
+
+	let curPatient := pat;
+	let dosage := finalDosage[curPatient];
+	let curBase  := Base[curPatient];
+	let curgamma := gamma[curPatient];
+	let curktr   := ktr[curPatient];
+	let curslope := slope[curPatient];
+
+	let {i in I} x[1,i] := (curBase*kcirc)/curktr;
+	let {i in I} x[2,i] := (curBase*kcirc)/curktr;
+	let {i in I} x[3,i] := curBase;
+	let {i in I} x[4,i] := 0;
+	let {i in I} x[5,i] := 0;
+
+	# Initial values controls
+	let {i in IU} wi[1,i] := 0;
+	for {i in CHEMO} let wi[1,i] := nchemo / card(CHEMO);
+	let q[1] := 1;
+
+	for {it in 9..0 by -1} {
+		printf "Simulation patient %d it %d\n" ,pat, it;
+		let dosage := finalDosage[pat] / (1.6)^it;
+		include ../solve.run;
+		let filename_ext := "simPat" & (pat) & "Dos" & (it);
+		include ../plot.run;
+		display dosage;
+		display wi;
+		display q[1];
+		printf "Sim: pat=%d it=%d dosage=%g q=%g\n", pat, it, dosage, q[1] >> ("aml_q.txt");
+	}
+
+	### Optimization
+#	let {i in I} x[1,i] := (curBase*kcirc)/curktr;
+#	let {i in I} x[2,i] := (curBase*kcirc)/curktr;
+#	let {i in I} x[3,i] := curBase;
+#	let {i in I} x[4,i] := 0;
+#	let {i in I} x[5,i] := 0;
+#
+#	# Initial values controls
+#	let {i in IU} wi[1,i] := 0;
+#	for {i in CHEMO} let wi[1,i] := nchemo / card(CHEMO);
+#	let q[1] := 1;
+#
+#	let mode := "Relaxed";
+#	let CHEMO := 32..264;
+#	for {it in 9..0 by -1} {
+#		printf "Optimization patient %d it %d\n" ,pat, it;
+#
+#		let dosage := finalDosage[pat] / (1.6)^it;
+#		for {i in CHEMO} let wi[1,i] := wi[1,i] / 1.6;
+#
+#		include ../solve.run;
+#		let filename_ext := "optPat" & (pat) & "Dos" & (it);
+#		include ../plot.run;
+#		display dosage;
+#		display wi;
+#		display q[1];
+#		printf "Opt: pat=%d it=%d dosage=%g q=%g total_solve_time=%g\n", pat, it, dosage, q[1], _total_solve_time >> ("aml_q.txt");
+#	}
+
+}
+

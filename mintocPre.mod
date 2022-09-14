@@ -180,4 +180,6 @@ param frel{X,0..no,I};
 var eta_x{X, IU} >= 0.0;            # Reformulation of absolute values, for CIA3 necessary for all k and i
 var eta_o{Omega, IU} >= 0.0;        # Reformulation of absolute values, for CIA1norm necessary for all o and i
 var eta_t{IU} >= 0.0;            # Reformulation of accumulated epsilon error over time.
+param sigma_max;			# Total variation parameter, maximum number of allowed switches
+var sigma{o in Omega, i in 0..ntu-2} binary;  # variable to track switches
 

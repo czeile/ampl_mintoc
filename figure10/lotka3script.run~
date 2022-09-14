@@ -1,0 +1,124 @@
+##############################
+model ../mintocPre.mod;
+model lotka.mod;
+model ../mintocPost.mod;
+data lotka.dat;
+##############################
+param relObj;
+param difObj;
+let nlpsolver := "ipopt";
+
+##############################
+let integrator := "explicitEuler";
+
+
+let mode := "Simulate";
+include ../solve.run;
+display objective;
+
+##############################
+let integrator := "radau3";
+let mode := "Relaxed";
+include ../solve.run;
+#include ../plot.run;
+include ../storeTrajectory.run;
+#include ../saveTrajectory.run;
+include ../printOutput.run;
+printf "\\num\\def\\objRelaxed%i{%.9g}\n", runiter, objective >> res/tex/includeSim.tex;
+
+let relObj := objective;
+display relObj;
+
+let M_GB := max{k in X, o in Omega, i in I} abs(frel[k,o,i]); 
+let C_GB := max{k in X, o in Omega,  i in I} abs(-p[k]*(frel[k,0,i]+w[o,i]*frel[k,1,i]));
+#param CIABound:= (M_GB+C_GB*12)*eps_GB;
+
+printf "\\num\\def\\MGB%i{%.9g}\n", runiter, M_GB >> res/tex/includeSim.tex;
+printf "\\num\\def\\CGB%i{%.9g}\n", runiter, C_GB >> res/tex/includeSim.tex;
+
+###############################
+#let mode := "SUR";
+#include ../algRound.run;
+#let mode := "Simulate";
+#include ../solve.run;
+#let filename_ext := "SUR";
+#let mode := "Standard1";
+#include ../algGBounds.run;
+#include ../plot.run;
+#include ../printOutput.run;
+
+##############################
+#include ../algBB.run;
+#let mode := "Simulate";
+#include ../solve.run;
+#let mode := "Standard1";
+#include ../algGBounds.run;
+#include ../plot.run;
+#include ../printOutput.run;
+
+##############################
+let mode := "CIA";
+include ../solveMILP.run;
+
+let eps_GB := controlSlack;
+param CIABound:= (M_GB+C_GB*12)*eps_GB;	     	
+
+printf "\\num\\def\\epsGB%i{%.9g}\n", runiter, eps_GB >> res/tex/includeSim.tex;
+printf "\\num\\def\\CIABound%i{%.9g}\n", runiter, CIABound >> res/tex/includeSim.tex;
+
+let mode := "Simulate";
+include ../solve.run;
+#include ../plot.run;
+include ../printOutput.run;
+printf "\\num\\def\\objCIA%i{%.9g}\n\\num\\def\\ciaeta%i{%.5g}\n", runiter, objective,  runiter, eta >> res/tex/includeSim.tex;
+
+let difObj:= abs(relObj-objective);
+printf "\\num\\def\\difCIA%i{%.9g}\n\\num\\def\\ciaeta%i{%.5g}\n", runiter, difObj,  runiter, eta >> res/tex/includeSim.tex;
+
+
+### Get objective for omega of CIA in ScaledCIA case
+let mode := "CIA";
+include ../algSimulateScaledCIA.run;
+printf "\\num\\def\\SimulateCIA%i{%.9g}\n", runiter, controlSlack >> res/tex/includeSim.tex;
+
+##############################
+let mode := "ScaledCIA1";
+include ../solveMILP.run;
+printf "\\num\\def\\MilpScaledCIAa%i{%.9g}\n", runiter, controlSlack >> res/tex/includeSim.tex;
+
+let mode := "Simulate";
+include ../solve.run;
+#include ../plot.run;
+include ../printOutput.run;
+printf "\\num\\def\\objScaledCIAa%i{%.9g}\n", runiter, objective >> res/tex/includeSim.tex;
+
+let difObj:= abs(relObj-objective);
+printf "\\num\\def\\difScaledCIAa%i{%.9g}\n", runiter, difObj >> res/tex/includeSim.tex;
+
+
+### Get objective for omega of ScaledCIA in CIA case
+let mode := "ScaledCIA1";
+include ../algSimulateScaledCIA.run;
+printf "\\num\\def\\SimulateScaledCIA%i{%.9g}\n", runiter, controlSlack >> res/tex/includeSim.tex;
+
+
+##############################
+#let mode := "ScaledCIA1a";
+#include ../solveMILP.run;
+#printf "\\num\\def\\MilpScaledCIAc%i{%.9g}\n", runiter, controlSlack >> res/tex/includeSim.tex;
+
+#let mode := "Simulate";
+#include ../solve.run;
+#include ../plot.run;
+#include ../printOutput.run;
+#printf "\\num\\def\\objScaledCIAc%i{%.9g}\n", runiter, objective >> res/tex/includeSim.tex;
+
+#let difObj:= abs(relObj-objective);
+#printf "\\num\\def\\difScaledCIAc%i{%.9g}\n", runiter, difObj >> res/tex/includeSim.tex;
+
+### Get objective for omega of ScaledCIA in CIA case
+#let mode := "ScaledCIA1";
+#include ../algSimulateScaledCIA.run;
+#printf "\\num\\def\\SimulateScaledCIAa%i{%.9g}\n", runiter, controlSlack >> res/tex/includeSim.tex;
+
+

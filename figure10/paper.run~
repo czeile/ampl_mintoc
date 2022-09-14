@@ -1,0 +1,308 @@
+##############################
+model ../mintocPre.mod;
+model lotka.mod;
+model ../mintocPost.mod;
+data lotka.dat;
+##############################
+param relObj;
+param difObj;
+let nlpsolver := "ipopt";
+
+##############################
+let integrator := "explicitEuler";
+let mode := "Simulate";
+include ../solve.run;
+display objective;
+
+##############################
+let integrator := "radau3";
+let mode := "Relaxed";
+include ../solve.run;
+
+let relObj := objective;
+
+printf "%.9g %.9g %.9g ", objective, sum{i in IU, o in Omega} (0.5 - abs(wi[o,i] - 0.5)) / no,  _total_solve_time  >> result.txt;
+let DummyTimeMeasure:=_total_solve_time;
+
+#printf "\\num\\def\\objRelaxed%i{%.9g}\n", runiter, objective >> res/tex/includeSim.tex;
+
+
+##############################
+let mode := "CIA";
+include ../solveMILP.run;
+let mode := "Simulate";
+include ../solve.run;
+let filename_ext := "CIA";
+
+let difObj:= abs(relObj-objective);
+printf "%.9g %.9g %.9g %.9g ", objective, sum{i in 1..ntu-1} max{o in Omega} abs(wi[o,i] - wi[o,i-1]), _total_solve_time-DummyTimeMeasure, difObj  >> result.txt;
+let DummyTimeMeasure:=_total_solve_time;
+
+## for Scaled Postprocessing
+for {o in Omega, i in IU} { let  w_post2[o,i,"CIA"] := wi[o,i]; };
+let post_objective2["CIA"]:=objective;
+
+##############################
+let mode := "ScaledCIA1";
+include ../solveMILP.run;
+let mode := "Simulate";
+include ../solve.run;
+let filename_ext := "ScaledCIA1";
+
+let difObj:= abs(relObj-objective);
+printf "%.9g %.9g %.9g %.9g ", objective, sum{i in 1..ntu-1} max{o in Omega} abs(wi[o,i] - wi[o,i-1]), _total_solve_time-DummyTimeMeasure, difObj  >> result.txt;
+let DummyTimeMeasure:=_total_solve_time;
+
+## for Scaled Postprocessing
+for {o in Omega, i in IU} { let  w_post2[o,i,"ScaledCIA1"] := wi[o,i]; };
+let post_objective2["ScaledCIA1"]:=objective;
+
+##############################
+let mode := "ScaledCIA1a";
+include ../solveMILP.run;
+let mode := "Simulate";
+include ../solve.run;
+let filename_ext := "ScaledCIA1a";
+
+let difObj:= abs(relObj-objective);
+printf "%.9g %.9g %.9g %.9g ", objective, sum{i in 1..ntu-1} max{o in Omega} abs(wi[o,i] - wi[o,i-1]), _total_solve_time-DummyTimeMeasure, difObj  >> result.txt;
+let DummyTimeMeasure:=_total_solve_time;
+
+## for Scaled Postprocessing
+for {o in Omega, i in IU} { let  w_post2[o,i,"ScaledCIA1a"] := wi[o,i]; };
+let post_objective2["ScaledCIA1a"]:=objective;
+
+
+#################
+# Greedy-Forward-Time Heuristic
+for {o in Omega, i in IU} {
+	let  w_post[o,i,"CIA"] := w_post2[o,i,"CIA"]; 
+	let  w_post[o,i,"ScaledCIA1"] := w_post2[o,i,"ScaledCIA1"]; 
+	let  w_post[o,i,"ScaledCIA1a"] := w_post2[o,i,"ScaledCIA1a"]; 
+	}
+let post_objective["CIA"]:=post_objective2["CIA"];
+let post_objective["ScaledCIA1"]:=post_objective2["ScaledCIA1"];
+let post_objective["ScaledCIA1a"]:=post_objective2["ScaledCIA1a"];
+
+let mode := "GreedyForward";
+include ../scaledCIAPostprocess.run;
+
+param obj_val;
+param opt_arg symbolic in Algo_ext;
+let obj_val := Infinity;
+for {alg in Algo_ext} {
+   if post_objective[alg] < obj_val then {
+      let obj_val := post_objective[alg];
+      let opt_arg := alg;
+   }
+}
+
+let difObj:= abs(relObj-obj_val);
+printf "%.9g %.9g %.9g %.9g ", obj_val, sum{i in 1..ntu-1} max{o in Omega} abs(w_post[o,i,opt_arg] - w_post[o,i-1,opt_arg]), _total_solve_time-DummyTimeMeasure, difObj  >> result.txt;
+let DummyTimeMeasure:=_total_solve_time;
+
+
+#for {o in Omega, i in IU} { let wi[o,i] := w_post[o,i,opt_arg]; }
+#let mode := "Simulate";
+#include ../solve.run;
+#display objective, sum{i in 1..ntu-1} max{o in Omega} abs(wi[o,i] - wi[o,i-1]);
+
+
+#################
+# Greedy-Cost-To-Go Heuristic
+
+for {o in Omega, i in IU} {
+	let  w_post[o,i,"CIA"] := w_post2[o,i,"CIA"]; 
+	let  w_post[o,i,"ScaledCIA1"] := w_post2[o,i,"ScaledCIA1"]; 
+	let  w_post[o,i,"ScaledCIA1a"] := w_post2[o,i,"ScaledCIA1a"]; 
+	}
+let post_objective["CIA"]:=post_objective2["CIA"];
+let post_objective["ScaledCIA1"]:=post_objective2["ScaledCIA1"];
+let post_objective["ScaledCIA1a"]:=post_objective2["ScaledCIA1a"];
+
+let mode := "GreedyLambda";
+include ../scaledCIAPostprocess.run;
+
+let obj_val := Infinity;
+for {alg in Algo_ext} {
+   if post_objective[alg] < obj_val then {
+      let obj_val := post_objective[alg];
+      let opt_arg := alg;
+   }
+}
+
+let difObj:= abs(relObj-obj_val);
+printf "%.9g %.9g %.9g %.9g ", obj_val, sum{i in 1..ntu-1} max{o in Omega} abs(w_post[o,i,opt_arg] - w_post[o,i-1,opt_arg]), _total_solve_time-DummyTimeMeasure, difObj  >> result.txt;
+let DummyTimeMeasure:=_total_solve_time;
+
+
+#################
+# EnumerationArcBlocks Heuristic
+
+for {o in Omega, i in IU} {
+	let  w_post[o,i,"CIA"] := w_post2[o,i,"CIA"]; 
+	let  w_post[o,i,"ScaledCIA1"] := w_post2[o,i,"ScaledCIA1"]; 
+	let  w_post[o,i,"ScaledCIA1a"] := w_post2[o,i,"ScaledCIA1a"]; 
+	}
+let post_objective["CIA"]:=post_objective2["CIA"];
+let post_objective["ScaledCIA1"]:=post_objective2["ScaledCIA1"];
+let post_objective["ScaledCIA1a"]:=post_objective2["ScaledCIA1a"];
+
+let mode := "EnumerationArcBlocks";
+include ../scaledCIAPostprocess.run;
+
+let obj_val := Infinity;
+for {alg in Algo_ext} {
+   if post_objective[alg] < obj_val then {
+      let obj_val := post_objective[alg];
+      let opt_arg := alg;
+   }
+}
+
+let difObj:= abs(relObj-obj_val);
+printf "%.9g %.9g %.9g %.9g ", obj_val, sum{i in 1..ntu-1} max{o in Omega} abs(w_post[o,i,opt_arg] - w_post[o,i-1,opt_arg]), _total_solve_time-DummyTimeMeasure, difObj  >> result.txt;
+let DummyTimeMeasure:=_total_solve_time;
+
+##########################################
+#SECOND LOOP WITCH REVERSED TIME CONSTRAINTS
+##########################################
+
+
+##############################
+let mode := "CIAReverse";
+include ../solveMILP.run;
+let mode := "Simulate";
+include ../solve.run;
+let filename_ext := "CIAReverse";
+
+let difObj:= abs(relObj-objective);
+printf "%.9g %.9g %.9g %.9g ", objective, sum{i in 1..ntu-1} max{o in Omega} abs(wi[o,i] - wi[o,i-1]), _total_solve_time-DummyTimeMeasure, difObj  >> result.txt;
+let DummyTimeMeasure:=_total_solve_time;
+
+## for Scaled Postprocessing
+for {o in Omega, i in IU} { let  w_post2[o,i,"CIA"] := wi[o,i]; };
+let post_objective2["CIA"]:=objective;
+
+##############################
+let mode := "ScaledCIA1Reverse";
+include ../solveMILP.run;
+let mode := "Simulate";
+include ../solve.run;
+let filename_ext := "ScaledCIA1Reverse";
+
+let difObj:= abs(relObj-objective);
+printf "%.9g %.9g %.9g %.9g ", objective, sum{i in 1..ntu-1} max{o in Omega} abs(wi[o,i] - wi[o,i-1]), _total_solve_time-DummyTimeMeasure, difObj  >> result.txt;
+let DummyTimeMeasure:=_total_solve_time;
+
+## for Scaled Postprocessing
+for {o in Omega, i in IU} { let  w_post2[o,i,"ScaledCIA1"] := wi[o,i]; };
+let post_objective2["ScaledCIA1"]:=objective;
+
+##############################
+let mode := "ScaledCIA1aReverse";
+include ../solveMILP.run;
+let mode := "Simulate";
+include ../solve.run;
+let filename_ext := "ScaledCIA1aReverse";
+
+let difObj:= abs(relObj-objective);
+printf "%.9g %.9g %.9g %.9g ", objective, sum{i in 1..ntu-1} max{o in Omega} abs(wi[o,i] - wi[o,i-1]), _total_solve_time-DummyTimeMeasure, difObj  >> result.txt;
+let DummyTimeMeasure:=_total_solve_time;
+
+## for Scaled Postprocessing
+for {o in Omega, i in IU} { let  w_post2[o,i,"ScaledCIA1a"] := wi[o,i]; };
+let post_objective2["ScaledCIA1a"]:=objective;
+
+
+#################
+# Greedy-Forward-Time Heuristic
+for {o in Omega, i in IU} {
+	let  w_post[o,i,"CIA"] := w_post2[o,i,"CIA"]; 
+	let  w_post[o,i,"ScaledCIA1"] := w_post2[o,i,"ScaledCIA1"]; 
+	let  w_post[o,i,"ScaledCIA1a"] := w_post2[o,i,"ScaledCIA1a"]; 
+	}
+let post_objective["CIA"]:=post_objective2["CIA"];
+let post_objective["ScaledCIA1"]:=post_objective2["ScaledCIA1"];
+let post_objective["ScaledCIA1a"]:=post_objective2["ScaledCIA1a"];
+
+let mode := "GreedyForward";
+include ../scaledCIAPostprocess.run;
+
+let obj_val := Infinity;
+for {alg in Algo_ext} {
+   if post_objective[alg] < obj_val then {
+      let obj_val := post_objective[alg];
+      let opt_arg := alg;
+   }
+}
+
+let difObj:= abs(relObj-obj_val);
+printf "%.9g %.9g %.9g %.9g ", obj_val, sum{i in 1..ntu-1} max{o in Omega} abs(w_post[o,i,opt_arg] - w_post[o,i-1,opt_arg]), _total_solve_time-DummyTimeMeasure, difObj  >> result.txt;
+let DummyTimeMeasure:=_total_solve_time;
+
+
+#for {o in Omega, i in IU} { let wi[o,i] := w_post[o,i,opt_arg]; }
+#let mode := "Simulate";
+#include ../solve.run;
+#display objective, sum{i in 1..ntu-1} max{o in Omega} abs(wi[o,i] - wi[o,i-1]);
+
+
+#################
+# Greedy-Cost-To-Go Heuristic
+
+for {o in Omega, i in IU} {
+	let  w_post[o,i,"CIA"] := w_post2[o,i,"CIA"]; 
+	let  w_post[o,i,"ScaledCIA1"] := w_post2[o,i,"ScaledCIA1"]; 
+	let  w_post[o,i,"ScaledCIA1a"] := w_post2[o,i,"ScaledCIA1a"]; 
+	}
+let post_objective["CIA"]:=post_objective2["CIA"];
+let post_objective["ScaledCIA1"]:=post_objective2["ScaledCIA1"];
+let post_objective["ScaledCIA1a"]:=post_objective2["ScaledCIA1a"];
+
+let mode := "GreedyLambda";
+include ../scaledCIAPostprocess.run;
+
+let obj_val := Infinity;
+for {alg in Algo_ext} {
+   if post_objective[alg] < obj_val then {
+      let obj_val := post_objective[alg];
+      let opt_arg := alg;
+   }
+}
+
+let difObj:= abs(relObj-obj_val);
+printf "%.9g %.9g %.9g %.9g ", obj_val, sum{i in 1..ntu-1} max{o in Omega} abs(w_post[o,i,opt_arg] - w_post[o,i-1,opt_arg]), _total_solve_time-DummyTimeMeasure, difObj  >> result.txt;
+let DummyTimeMeasure:=_total_solve_time;
+
+
+#################
+# EnumerationArcBlocks Heuristic
+
+for {o in Omega, i in IU} {
+	let  w_post[o,i,"CIA"] := w_post2[o,i,"CIA"]; 
+	let  w_post[o,i,"ScaledCIA1"] := w_post2[o,i,"ScaledCIA1"]; 
+	let  w_post[o,i,"ScaledCIA1a"] := w_post2[o,i,"ScaledCIA1a"]; 
+	}
+let post_objective["CIA"]:=post_objective2["CIA"];
+let post_objective["ScaledCIA1"]:=post_objective2["ScaledCIA1"];
+let post_objective["ScaledCIA1a"]:=post_objective2["ScaledCIA1a"];
+
+let mode := "EnumerationArcBlocks";
+include ../scaledCIAPostprocess.run;
+
+let obj_val := Infinity;
+for {alg in Algo_ext} {
+   if post_objective[alg] < obj_val then {
+      let obj_val := post_objective[alg];
+      let opt_arg := alg;
+   }
+}
+
+let difObj:= abs(relObj-obj_val);
+printf "%.9g %.9g %.9g %.9g ", obj_val, sum{i in 1..ntu-1} max{o in Omega} abs(w_post[o,i,opt_arg] - w_post[o,i-1,opt_arg]), _total_solve_time-DummyTimeMeasure, difObj  >> result.txt;
+let DummyTimeMeasure:=_total_solve_time;
+
+
+
+
+

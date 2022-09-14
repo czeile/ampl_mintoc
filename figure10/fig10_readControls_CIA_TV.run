@@ -1,0 +1,33 @@
+#
+# This file is part of ampl_mintoc.
+#
+# Copyright 2021, Sebastian Sager, Manuel Tetschke, Clemens Zeile
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree. 
+#
+# ampl_mintoc is free software: you can redistribute it and/or modify
+# it under the terms of the BSD-style License
+#
+# ampl_mintoc is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+#
+
+
+printf "****Restoring Control data from POC Computations \n";
+printf " \n";
+include ../set.run;
+
+read N_param < ("fig10_Saved_Controls_" & problem_name & "_CIA_TV.txt");
+read POC_var < ("fig10_Saved_Controls_" & problem_name & "_CIA_TV.txt");
+read Inst_no < ("fig10_Saved_Controls_" & problem_name & "_CIA_TV.txt");
+read{o in Omega, i in IU} alpha[o,i] < ("fig10_Saved_Controls_" & problem_name & "_CIA_TV.txt");
+
+#display N_param;
+#display POC_var;
+#display Inst_no;
+#display alpha;
+
+#close ("Saved_Controls_" & problem_name & ".txt");

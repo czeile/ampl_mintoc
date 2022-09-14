@@ -111,6 +111,19 @@ subject to
 	omegaSOS1 {i in IU}:
  		sum{o in Omega} omega[o,i] <= 1; # set  '<=' in case of single mode, multimode: '='
 
+
+############
+### Total Variation constraints
+
+	CIATV_couple:
+		sum {o in Omega, i in 0..ntu-2} sigma[o,i] <= sigma_max;
+
+	CIATV_accumulationP{o in Omega, i in 0..ntu-2}:
+		 ( omega[o,i+1] - omega [o,i]) <= sigma[o,i];
+		
+	CIATV_accumulationM{o in Omega, i in 0..ntu-2}:
+		(-1)* ( omega[o,i+1] - omega [o,i]) <= sigma[o,i];
+
 ############
 ### Combinatorial Integral Approximation 1-Norm
 
@@ -242,6 +255,8 @@ problem STO:
 ### MILPs
 
 problem milpCIA:        controlSlack,CIAabsp,CIAabsm,omegaSOS1,eta,omega;
+
+problem milpCIATV:        controlSlack,CIAabsp,CIAabsm,omegaSOS1,CIATV_couple, CIATV_accumulationP, CIATV_accumulationM, eta,omega,sigma;
 
 problem milpCIAReverse:    controlSlack,CIAabspReverse,CIAabsmReverse,omegaSOS1,eta,omega;
 

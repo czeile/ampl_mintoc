@@ -45,7 +45,7 @@ if (opttype=="NLP") then {
 	else if (nlpsolver=="minos") then { option solver minos; } 
 	else if (nlpsolver=="snopt") then { option solver snopt; } 
 	else if (nlpsolver=="conopt") then { option solver conopt; } 
-	else { option solver ipopt; option ipopt_options 'print_level=5 halt_on_ampl_error yes max_iter=10000 max_cpu_time=3600 linear_solver=ma57'; }
+	else { option solver ipopt; option ipopt_options 'print_level=5 halt_on_ampl_error yes max_iter=10000 max_cpu_time=3600'; } # linear_solver=ma77'; }
 # linear_solver=ma27 min_refinement_steps=0 max_refinement_steps=0
 #	else { option solver ipopt; option ipopt_options 'print_level=5 halt_on_ampl_error yes max_iter=500 max_cpu_time=60'; }
 	option relax_integrality 1;

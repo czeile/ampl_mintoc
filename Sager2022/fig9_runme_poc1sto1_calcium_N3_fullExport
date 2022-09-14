@@ -1,0 +1,402 @@
+#!/bin/bash
+
+##########################################################################
+### Problem specific
+##########################################################################
+myproblem='../calcium/calcium'
+myproblemshort='calcium'
+NT=48000;
+NTPERU=16000;
+
+#myproblem='lotka'
+#myproblemshort='lotka'
+#NT=48000;
+#NTPERU=6000;
+#NT=480;
+#NTPERU=48;
+
+##########################################################################
+### General functions, output for ampl and such
+##########################################################################
+writeOutput()
+{
+	echo "if (match (solve_message, \"infeasible\") > 0) or (match (solve_message, \"presolve\") > 0) then {" >> $filename
+	echo "	printf \"Infeasible %.8lg\\n\", _total_solve_time >> "$outfile";" >> $filename
+	echo "	for {o in Omega, i in IU} { printf \" , \" >> "$outfilewpoc"; }" >> $filename
+	echo "	printf \"\\n\" >> "$outfilewpoc";" >> $filename
+	echo "}" >> $filename
+	echo "else if (match (solve_message, \"Maximum\") > 0) then {" >> $filename
+	echo "	printf \"Maxiter %.8lg\\n\", _total_solve_time >> "$outfile";" >> $filename
+	echo "  for {o in Omega, i in IU} { printf \" , \" >> "$outfilewpoc"; }" >> $filename
+	echo "	printf \"\\n\" >> "$outfilewpoc";" >> $filename
+	echo "}" >> $filename
+	echo "else {" >> $filename
+	echo "	printf \"%.8lg %.8lg %.8lg\\n\", objective, _total_solve_time, sum{i in 1..ntu-1} max{o in Omega} abs(wi[o,i] - wi[o,i-1]) >> "$outfile";" >> $filename
+	echo "  for {o in Omega, i in IU} { printf \"%16.16f, \", wi[o,i] >> "$outfilewpoc"; }" >> $filename
+	echo "	printf \"\\n\" >> "$outfilewpoc";" >> $filename
+	echo "}" >> $filename
+	echo " " >> $filename
+}
+
+writeOutputSTO()
+{
+	echo "var nsw_sto;" >> $filename
+	echo "var nsw_tol;" >> $filename
+	echo "if (match (solve_message, \"infeasible\") > 0) or (match (solve_message, \"presolve\") > 0) then {" >> $filename
+	echo "	printf \"Infeasible %.8lg\\n\", _total_solve_time >> "$outfile";" >> $filename
+	echo "	for {o in Omega, i in IU} { printf \" , \" >> "$outfilewsto"; }" >> $filename
+	echo "	printf \"\\n\" >> "$outfilewsto";" >> $filename
+	echo "}" >> $filename
+	echo "else if (match (solve_message, \"Maximum\") > 0) then {" >> $filename
+	echo "	printf \"Maxiter %.8lg\\n\", _total_solve_time >> "$outfile";" >> $filename
+	echo "  for {o in Omega, i in IU} { printf \" , \" >> "$outfilewsto"; }" >> $filename
+	echo "	printf \"\\n\" >> "$outfilewsto";" >> $filename
+	echo "}" >> $filename
+	echo "else {" >> $filename
+	echo "include nsw_sto.run;" >> $filename
+	echo "	printf \"%.8lg %.8lg %.8lg\\n\", objective, _total_solve_time, nsw_sto >> "$outfile";" >> $filename
+	echo "  for {o in Omega, i in IU} { printf \"%16.16f, \", wi[o,i] >> "$outfilewsto"; }" >> $filename
+	echo "	printf \"\\n\" >> "$outfilewsto";" >> $filename
+	echo "}" >> $filename
+	echo " " >> $filename
+}
+
+writeOutputSUR()
+{
+	echo "if (match (solve_message, \"infeasible\") > 0) then {" >> $filename
+	echo "	printf \"Infeasible %.8lg\\n\", _total_solve_time >> "$outfile";" >> $filename
+	echo "	for {o in Omega, i in IU} { printf \" , \" >> "$outfilewsur"; }" >> $filename
+	echo "	printf \"\\n\" >> "$outfilewsur";" >> $filename
+	echo "}" >> $filename
+	echo "else if (match (solve_message, \"Maximum\") > 0) then {" >> $filename
+	echo "	printf \"Maxiter %.8lg\\n\", _total_solve_time >> "$outfile";" >> $filename
+	echo "	for {o in Omega, i in IU} { printf \" , \" >> "$outfilewsur"; }" >> $filename
+	echo "	printf \"\\n\" >> "$outfilewsur";" >> $filename
+	echo "}" >> $filename
+	echo "else {" >> $filename
+	echo "	printf \"%.8lg %.8lg %.8lg\\n\", objective, _total_solve_time, sum{i in 1..ntu-1} max{o in Omega} abs(wi[o,i] - wi[o,i-1]) >> "$outfile";" >> $filename
+	echo "  for {o in Omega, i in IU} { printf \"%16.16f, \", wi[o,i] >> "$outfilewsur"; }" >> $filename
+	echo "	printf \"\\n\" >> "$outfilewsur";" >> $filename
+	echo "}" >> $filename
+	echo " " >> $filename
+}
+
+RunSUR()
+{
+	echo "let mode := \"SUR\";" >> $filename
+	echo "include ../algRound.run;" >> $filename
+}
+
+RunRelaxed()
+{
+	echo "let mode := \"Relaxed\";" >> $filename
+#	echo "let integrator := \"radau3\";" >> $filename
+	echo "let integrator := \"explicitEuler\";" >> $filename
+	echo "include ../solve.run;" >> $filename
+}
+
+RunRelaxedSim()
+{
+	echo "let mode := \"Simulate\";" >> $filename
+	echo "let integrator := \"explicitEuler\";" >> $filename
+	echo "include ../solve.run;" >> $filename
+}
+
+RunSTO()
+{
+	echo "let mode := \"STO\";" >> $filename
+	echo "let integrator := \"explicitEuler\";" >> $filename
+	echo "include ../solve.run;" >> $filename
+}
+
+RunSTOSim()
+{
+	echo "let mode := \"SimulateSTO\";" >> $filename
+	echo "let integrator := \"explicitEuler\";" >> $filename
+	echo "include ../solve.run;" >> $filename
+}
+
+writeDatfileCommon()
+{
+	cp -f $myproblem.dat $datfile
+	echo "let nt := "$1";" >> $datfile
+	echo "let ntperu := "$2";" >> $datfile
+}
+
+writeDatfileFixed()
+{
+	writeDatfileCommon $2 $3
+	echo "let {i in IU} wi[1,i] := "$1";" >> $datfile
+}
+
+writeDatfileRandom()
+{
+	writeDatfileCommon $2 $3
+	echo "option randseed "$1";" >> $datfile
+	echo "let {i in IU} wi[1,i] := Uniform01();" >> $datfile
+	echo "let {k in 1..nxd-1, i in I} x[k,i] := xtilde[k];" >> $datfile
+	echo "let {i in I} x[nxd,i] := 0;" >> $datfile  # Special assumption: x(nxd) is Mayer term
+#	echo "let {k in 1..nxd, i in I} x[k,i] := Uniform01();" >> $datfile
+}
+
+writeDatfile()
+{
+	if [ $i -le 9 ]
+		then writeDatfileFixed "0.0"$i $NT $NTPERU
+	elif [ $i -le 99 ]
+		then writeDatfileFixed "0."$i $NT $NTPERU
+	elif [ $i -le 100 ]
+		then writeDatfileFixed "1.0" $NT $NTPERU
+	elif [ $i -le 201 ]
+		then writeDatfileRandom $i $NT $NTPERU
+	fi
+}
+
+writeHeader()
+{
+	echo "model ../mintocPre.mod;" > $filename
+	echo "model "$myproblem".mod;" >> $filename
+	echo "model ../mintocPost.mod;" >> $filename
+	echo "data "$datfile";" >> $filename
+	echo >> $filename
+	#echo "let nlpsolver := \"snopt\";" >> $filename
+	echo "let nlpsolver := \"ipopt\";" >> $filename
+}
+
+determineIterations()
+{
+	grep 'Number of Iterations' 'log/'$myproblemshort$approach$NT$NTPERU'_I'$i'.log' > 'log/iter'$myproblemshort$NT$NTPERU'.txt'
+	while read line; do
+		echo $line >> $outfile
+	done < 'log/iter'$myproblemshort$NT$NTPERU'.txt'
+}
+
+##########################################################################
+### Approach specific
+##########################################################################
+initNames()
+{
+	filename='automatic'$myproblemshort$approach'_'$NT'_'$NTPERU'.run'
+	datfile='automatic'$myproblemshort$approach'_'$NT'_'$NTPERU'.dat'
+	#outfile='out/'$myproblemshort'out'$approach'.dat'
+	outfile='optresults/'$myproblemshort'_'$NT'_'$NTPERU'/'$myproblemshort'out'$approach'.dat'
+	outfilewpoc='optresults/'$myproblemshort'_'$NT'_'$NTPERU'/'$myproblemshort'out'$approach'_wPOC.csv'
+	outfilewsto='optresults/'$myproblemshort'_'$NT'_'$NTPERU'/'$myproblemshort'out'$approach'_wSTO.csv'
+	outfilewsur='optresults/'$myproblemshort'_'$NT'_'$NTPERU'/'$myproblemshort'out'$approach'_wSUR.csv'
+
+	rm -f $outfilewpoc $outfilewsur $outfilewsto $outfile $datfile $filename;
+}
+
+runAMPL()
+{
+	stdbuf -oL timeout 62m ampl $filename > 'log/'$myproblemshort$approach$NT$NTPERU'_I'$i'.log'
+	timeoutput=$?
+	determineIterations
+
+	#		Check if time limit is violated
+	if [ $timeoutput -eq 124 ]
+		then echo "TimeLimit" >> $outfile
+#	else
+#		echo $timeoutput
+	fi
+}
+
+# POC initialized xtilde, then STO
+runPOC1STO1()
+{
+	writeDatfile
+
+	writeHeader
+	RunRelaxed
+	writeOutput
+	RunSTO
+	writeOutputSTO
+
+	runAMPL
+}
+
+# POC initialized xtilde, then STO with single shooting 
+runPOC1STO2()
+{
+	writeDatfile
+
+	writeHeader
+	RunRelaxed
+	writeOutput
+	RunSTOSim
+	RunSTO
+	writeOutputSTO
+
+	runAMPL
+}
+
+# POC initialized single shooting, then STO without
+runPOC2STO1()
+{
+	writeDatfile
+
+	writeHeader
+	RunRelaxedSim
+	RunRelaxed
+	writeOutput
+	RunSTO
+	writeOutputSTO
+
+	runAMPL
+}
+
+# POC initialized single shooting, then STO
+runPOC2STO2()
+{
+	writeDatfile
+
+	writeHeader
+	RunRelaxedSim
+	RunRelaxed
+	writeOutput
+	RunSTOSim
+	RunSTO
+	writeOutputSTO
+
+	runAMPL
+}
+
+# POC initialized xtilde, then SUR and simulation, then STO
+runPOC1SURSTO1()
+{
+	writeDatfile
+
+	writeHeader
+	RunRelaxed
+	writeOutput
+	RunSUR
+	RunRelaxedSim
+	writeOutputSUR
+	RunSTO
+	writeOutputSTO
+
+	runAMPL
+}
+
+# POC initialized xtilde, then SUR and simulation, then STO with single shooting
+runPOC1SURSTO2()
+{
+	writeDatfile
+
+	writeHeader
+	RunRelaxed
+	writeOutput
+	RunSUR
+	RunRelaxedSim
+	writeOutputSUR
+	RunSTOSim
+	RunSTO
+	writeOutputSTO
+
+	runAMPL
+}
+
+# POC initialized single shooting, then SUR and simulation, then STO
+runPOC2SURSTO1()
+{
+	writeDatfile
+
+	writeHeader
+	RunRelaxedSim
+	RunRelaxed
+	writeOutput
+	RunSUR
+	RunRelaxedSim
+	writeOutputSUR
+	RunSTO
+	writeOutputSTO
+
+	runAMPL
+}
+
+# POC initialized single shooting, then SUR and simulation, then STO with single shooting
+runPOC2SURSTO2()
+{
+	writeDatfile
+
+	writeHeader
+	RunRelaxedSim
+	RunRelaxed
+	writeOutput
+	RunSUR
+	RunRelaxedSim
+	writeOutputSUR
+	RunSTOSim
+	RunSTO
+	writeOutputSTO
+
+	runAMPL
+}
+
+# POC initialized xtilde
+runPOC1()
+{
+	writeDatfile
+
+	writeHeader
+	RunRelaxed
+	writeOutput
+
+	runAMPL
+}
+
+# STO initialized xtilde
+runSTO1()
+{
+	writeDatfile
+
+	writeHeader
+	RunSTO
+	writeOutputSTO
+
+	runAMPL
+}
+
+# POC initialized by single shooting
+runPOC2()
+{
+	writeDatfile
+
+	writeHeader
+	RunRelaxedSim
+	RunRelaxed
+	writeOutput
+
+	runAMPL
+}
+
+# STO initialized by single shooting
+runSTO2()
+{
+	writeDatfile
+
+	writeHeader
+	RunSTOSim
+	RunSTO
+	writeOutputSTO
+
+	runAMPL
+}
+
+		
+
+##########################################################################
+##########################################################################
+### Main loop 
+##########################################################################
+##########################################################################
+	
+approach='POC1STO1_export'
+initNames
+
+for i in {101..200..1}
+	do
+		echo "Initialization "$i >> $outfile; echo "Initialization "$i $approach
+		runPOC1STO1
+	done
+
