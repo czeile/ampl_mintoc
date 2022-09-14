@@ -1,0 +1,24 @@
+model ../mintocPre.mod;
+model ../calcium/calcium.mod;
+model ../mintocPost.mod;
+data automaticcalciumPOC2_48000_480.dat;
+
+let nlpsolver := "ipopt";
+let mode := "Simulate";
+let integrator := "explicitEuler";
+include ../solve.run;
+let mode := "Relaxed";
+let integrator := "explicitEuler";
+include ../solve.run;
+include ../saveTrajectory.run;;
+include ../plot.run;;
+if (match (solve_message, "infeasible") > 0) or (match (solve_message, "presolve") > 0) then {
+	printf "Infeasible %.8lg\n", _total_solve_time >> optresults/calcium_48000_480/calciumoutPOC2.dat;
+}
+else if (match (solve_message, "Maximum") > 0) then {
+	printf "Maxiter %.8lg\n", _total_solve_time >> optresults/calcium_48000_480/calciumoutPOC2.dat;
+}
+else {
+	printf "%.8lg %.8lg\n", objective, _total_solve_time >> optresults/calcium_48000_480/calciumoutPOC2.dat;
+}
+ 

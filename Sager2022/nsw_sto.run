@@ -1,0 +1,28 @@
+let nsw_sto := 0;
+
+let nsw_tol := 1e-4;
+
+if (wi[1,0]<1-nsw_tol) and (wi[1,0]>nsw_tol) then {
+	let nsw_sto := nsw_sto + 1;
+}
+
+for {i in 1..ntu-1} { 
+display wi[1,i-1], wi[1,i];
+	if ((wi[1,i]<nsw_tol) and (wi[1,i-i]>1-nsw_tol)) then {
+		let nsw_sto := nsw_sto + 1;
+	}
+
+	if ((wi[1,i]>1-nsw_tol) and (wi[1,i-i]<1-nsw_tol)) then {
+		let nsw_sto := nsw_sto + 1;
+	}
+
+	if (wi[1,i-1]<1-nsw_tol) then {
+		if ((wi[1,i]<1-nsw_tol) and (wi[1,i]>nsw_tol)) then {
+			let nsw_sto := nsw_sto + 1;
+		}
+	}
+
+	if ((wi[1,i]<1-nsw_tol) and (wi[1,i]>nsw_tol)) then {
+		let nsw_sto := nsw_sto + 1;
+	}
+} 

@@ -1,0 +1,40 @@
+##############################
+model ../mintocPre.mod;
+model sim.mod;
+model ../mintocPost.mod;
+data sim.dat;
+##############################
+
+let nlpsolver := "ipopt";
+let integrator := "radau3";
+let mode := "Simulate";
+
+##############################
+let dosage := finalDosage[curPatient];
+
+# D123
+let CHEMO := 32..34 union 44..46 union 56..58 union 68..70 union 80..82 union 92..94;
+let {i in IU} wi[1,i] := 0;
+for {i in CHEMO} let wi[1,i] := nchemo / card(CHEMO);
+include ../solve.run;
+printf "123 Sim: pat=%d q=%g\n", curPatient, q[1];
+include tend.run;
+let filename_ext := "leukemia123";
+include ../plot.run;
+
+# D135
+let {i in I} x[1,i] := (curBase*kcirc)/curktr;
+let {i in I} x[2,i] := (curBase*kcirc)/curktr;
+let {i in I} x[3,i] := curBase;
+let {i in I} x[4,i] := 0;
+let {i in I} x[5,i] := 0;
+
+let CHEMO := 32..34 union 44..46 union 80..82 union 92..94 union 128..130 union 140..142;
+let {i in IU} wi[1,i] := 0;
+for {i in CHEMO} let wi[1,i] := nchemo / card(CHEMO);
+include ../solve.run;
+printf "135 Sim: pat=%d q=%g\n", curPatient, q[1];
+include tend.run;
+let filename_ext := "leukemia135";
+include ../plot.run;
+

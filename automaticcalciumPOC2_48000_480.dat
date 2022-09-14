@@ -1,0 +1,6 @@
+let nt := 48000;
+let ntperu := 480;
+option randseed 102;
+let {i in IU} wi[1,i] := Uniform01();
+let {k in 1..nxd-1, i in I} x[k,i] := xtilde[k];
+let {i in I} x[nxd,i] := 0;

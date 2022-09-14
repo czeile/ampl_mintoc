@@ -1,0 +1,49 @@
+set style line 1 linetype 1 linewidth 4 linecolor rgb "grey"
+set style line 2 linetype 2 linewidth 4 linecolor rgb "grey"
+set style line 3 linetype 3 linewidth 4 linecolor rgb "grey"
+set style line 4 linetype 1 linewidth 4 linecolor rgb "black"
+set style line 5 linetype 2 linewidth 4 linecolor rgb "black"
+set style line 6 linetype 3 linewidth 4 linecolor rgb "black"
+
+set terminal postscript color
+set xlabel "t"
+
+###############
+set title "Lotka control and states, relaxed solution"
+set output "plot_lotka_relaxed.ps"
+plot "trajectoryRelaxed.txt" u 1:4 t "Control" w l ls 1, "trajectoryRelaxed.txt" u 1:2 t "Prey" w l ls 2, "trajectoryRelaxed.txt" u 1:3 t "Predator" w l ls 3
+
+###############
+set title "Lotka control and states, SUR solution"
+set output "plot_lotka_SUR.ps"
+plot "trajectorySUR.txt" u 1:4 t "Control" w l ls 1, "trajectorySUR.txt" u 1:2 t "Prey" w l ls 2, "trajectorySUR.txt" u 1:3 t "Predator" w l ls 3
+
+###############
+#set title "Lotka dual variables"
+#set output "plot_lotka_dual.ps"
+#plot "trajectoryRelaxedDual.txt" u 1:2 t "lambda1" w l ls 1, "trajectoryRelaxedDual.txt" u 1:3 t "lambda2" w l ls 2, "trajectoryRelaxedDual.txt" u 1:4 t "f1" w l ls 3, "trajectoryRelaxedDual.txt" u 1:5 t "f2" w l ls 4
+
+###############
+set title "Lotka scaling"
+set output "plot_lotka_scaling.ps"
+plot "trajectoryScaledCIA3.txt" u 1:2 t "scaling" w l ls 1, "trajectoryScaledCIA3.txt" u 1:3 t "trajectoryScaledCIA3.txt" w l ls 2
+
+
+###############
+set title "Lotka CIA"
+set output "plot_lotka_CIA.ps"
+plot "trajectoryCIA.txt" u 1:2 t "scaling" w l ls 1, "trajectoryCIA.txt" u 1:3 t "trajectoryCIA.txt" w l ls 2
+
+###############
+#set title "Lotka control and states, STO solution"
+#set output "plot_lotka_STO.ps"
+#plot "trajectorySTO.txt" u 1:4 t "Control" w l ls 1, "trajectorySTO.txt" u 1:2 t "Prey" w l ls 2, "trajectorySTO.txt" u 1:3 t "Predator" w l ls 3
+
+
+#plot "trajectoryRelaxed.txt" u 1:4 t "Control" w l ls 1, "trajectoryRelaxed.txt" u 1:2 t "Prey" w l ls 2, "trajectoryRelaxed.txt" u 1:3 t "Predator" w l ls 3, "trajectoryCIA.txt" u 1:4 t "Control" w l ls 4, "trajectoryCIA.txt" u 1:2 t "Prey" w l ls 5, "trajectoryCIA.txt" u 1:3 t "Predator" w l ls 6
+
+###############
+set title "Lotka Deviation of states"
+set output "plot_lotka_CIA_Deviation.ps"
+plot "trajectoryDeviation.txt" u 1:2 t "x1" w l ls 1, "trajectoryDeviation.txt" u 1:3 t "x2" w l ls 2
+

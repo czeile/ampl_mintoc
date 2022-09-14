@@ -32,6 +32,11 @@ if (mode=="CIA") then {
 	let filename_ext := "CIA";
 	let dummyMilpSolve :=1;
 }
+if (mode=="CIATV") then {
+	printf "***** COMBINATORIAL INTEGRAL APPROXIMATION with TOTAL VARIATION constraint*****\n";
+	let filename_ext := "CIATV";
+	let dummyMilpSolve :=1;
+}
 else if (mode=="CIAReverse") then {
 	printf "***** CIA1 Reverse *****\n";
 	let filename_ext := "CIAReverse";
@@ -67,6 +72,9 @@ else {
 
 if (mode=="CIA") then {
  		problem milpCIA;
+}
+else if (mode=="CIATV") then {
+ 		problem milpCIATV;
 }
 else if (mode=="CIAReverse") then {
  		problem milpCIAReverse;

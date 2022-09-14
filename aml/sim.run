@@ -1,0 +1,23 @@
+##############################
+model ../mintocPre.mod;
+model sim.mod;
+model ../mintocPost.mod;
+data sim.dat;
+##############################
+
+let nlpsolver := "ipopt";
+
+##############################
+let integrator := "radau3";
+let mode := "Simulate";
+
+for {it in 0..0 by -1} {
+	let dosage := finalDosage[curPatient] / (1.7)^it;
+	include ../solve.run;
+	printf "Sim: pat=%d it=%d dosage=%g q=%g\n", curPatient, it, dosage, q[1];
+}
+#printf "%d %g\n", cycleoffset, q[1] >> ("res/sim" & (curPatient) & ".txt");
+
+let filename_ext := "Long" & (curPatient) & "off0";
+include ../plot.run;
+

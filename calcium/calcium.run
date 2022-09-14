@@ -25,18 +25,18 @@ data calcium.dat;
 ##############################
 let nlpsolver := "ipopt";
 let integrator := "explicitEuler";
-#let {i in IU} wi[1,i] := 0.1;
+let {i in IU} wi[1,i] := 0.1;
 ##############################
 
 ##############################
 #let mode := "Relaxed";
 #include ../readTrajectory.run;
-let mode := "Simulate";
-include ../solve.run;
-display objective;
-#let mode := "Relaxed";
-#let mode := "STO";
+#let mode := "Simulate";
 #include ../solve.run;
+#display objective;
+let mode := "Relaxed";
+#let mode := "STO";
+include ../solve.run;
 #include ../saveTrajectory.run;
 include ../plot.run;
 

@@ -1,0 +1,16 @@
+#!/bin/bash
+
+##########################################################################
+
+NPATIENTS=6;
+STARTDAY=1;
+ENDDAY=1;
+
+for ((PATIENT=6;PATIENT<=$NPATIENTS;PATIENT++)) do
+	for ((DAY=$STARTDAY;DAY<=$ENDDAY;DAY++)) do
+		echo "let curPatient := "$PATIENT";" > temp.dat
+		echo "let cycleoffset := "$DAY";" >> temp.dat
+		ampl sim.run
+	done
+done
+

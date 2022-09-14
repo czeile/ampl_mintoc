@@ -1,0 +1,146 @@
+# ------------------------------------
+# Data: AML problem
+# ------------------------------------
+
+# Dimensions, all other 0 by default
+param nxd := 5;
+param no  := 1;
+param nre := 6;
+param nc  := 1;
+param nq  := 1;
+
+# Algorithmic parameters
+param nt     := 25920; # 36*24*3*10;
+param ntperu := 30;    # 3*10
+#param nt     := 51840;
+#param ntperu := 60;
+
+let nri := card(IU) + 1;
+
+# Problem parameters
+# ------------------
+let T := 36.0;
+
+# Constants
+let k10    := 98.64;
+let k12    := 2.68;
+let k21    := 1.29; 
+let V1     := 26.8; 
+let MM     := 0.0041;  
+let kcirc  := 2.3765;
+let BSA    := 1.92;
+let dosage := 3000;
+
+### Patients
+# ----------
+let nPatients := 6;
+
+# P0 population based, for direct influence of E
+let Base[0]   := 6.90;
+let gamma[0]  := 0.40;  
+let ktr[0]    := 0.26;      
+let slope[0]  := 3.09; 
+
+# P1 For direct influence of E (dosage 3000/3h)
+#let Base[1]   := 6.34;
+#let gamma[1]  := 0.71;  
+#let ktr[1]    := 0.16;      
+#let slope[1]  := 1.59; 
+# P1 For indirect influence of E
+let Base[1]   := 6.23629;
+let gamma[1]  := 0.713229;  
+let ktr[1]    := 0.164069;      
+let slope[1]  := 7.87834; 
+
+# P2 (dosage 1000/3h)
+let Base[2]   := 8.23;
+let gamma[2]  := 0.26;  
+let ktr[2]    := 0.29;      
+let slope[2]  := 2.63; 
+
+# P3 (dosage 1000/3h)
+let Base[3]   := 5.69;
+let gamma[3]  := 0.44;  
+let ktr[3]    := 0.20;      
+let slope[3]  := 1.55; 
+
+# P4 (dosage 3000/3h)
+let Base[4]   := 7.51;
+let gamma[4]  := 0.12;  
+let ktr[4]    := 0.46;      
+let slope[4]  := 0.89; 
+
+# P5 (dosage 3000/3h)
+let Base[5]   := 7.37;
+let gamma[5]  := 0.24;  
+let ktr[5]    := 0.33;      
+let slope[5]  := 0.93; 
+
+# P6 (dosage 3000/3h)
+let Base[6]   := 11.83;
+let gamma[6]  := 0.16;  
+let ktr[6]    := 0.36;      
+let slope[6]  := 1.39; 
+
+let {pat in PATIENTS} finalDosage[pat] := 1000;
+let finalDosage[2] := 333.333;
+let finalDosage[3] := 333.333;
+
+# P0   & 6.90   &  0.27   & 0.40   & 0.03    & 0.26   &  0.02  & 3.09  & 0.45      \\     % Population check
+# P1   & 6.34   &   0.58  & 0.71   & 0.15    & 0.16   & 0.03   & 1.59  & 0.34      \\        % MS53 check
+# P2   & 8.23   &   0.77  & 0.26   & 0.07    & 0.29   & 0.05   & 2.63  & 0.82      \\        % WG47 check
+# P3   & 5.69   &   0.77  & 0.44   & 0.18    & 0.20   & 0.05   & 1.55  & 0.42      \\        % KM40 check
+# P4   & 7.51   &   0.55  & 0.12   & 0.05    & 0.46   & 0.12   & 0.89  & 0.19      \\        % MH61 check
+# P5   & 7.37   &   0.65  & 0.24   & 0.09    & 0.33   & 0.08   & 0.93  & 0.22      \\        % RA86 check
+# P6   & 11.83  &   0.67  & 0.16   & 0.04    & 0.36   & 0.05   & 1.39  & 0.30      \\ \hline % WM49 check
+
+
+# Initial values control
+# ----------------------
+## Day 1, 3, 5
+#let CHEMO := 32..34 union 44..46 union 80..82 union 92..94 union 128..130 union 140..142;
+## Day 1, 3, 5
+let CHEMO := 32..34 union 44..46 union 56..58 union 68..70 union 80..82 union 92..94;
+#let CHEMO := 32..34 union 44..46 union 80..82 union 92..94 union 128..130 union 140..142;
+#let CHEMO := 32..34 union 44..46 union 80..82 union 92..94 union 128..130 union 140..142;
+#let CHEMO := 32..34 union 44..46 union 92..94 union 104..106 union 152..154 union 164..166;
+#let CHEMO := 32..34 union 44..46 union 104..106 union 116..118 union 176..178 union 188..190;
+#let CHEMO := 32..49;
+#let CHEMO := 32..67;
+#let CHEMO := 32..37 union 44..49 union 80..85 union 92..97 union 128..133 union 140..145;
+#let CHEMO := 32..32 union 44..44 union 80..80 union 92..92 union 128..128 union 140..140;
+#let CHEMO := 32..264; # diff 129..129;
+let nchemo := 18;
+
+# Initial values controls
+let {i in IU} wi[1,i] := 0;
+for {i in CHEMO} let wi[1,i] := nchemo / card(CHEMO);
+let q[1] := 1;
+
+# Standard: patient 1
+let curPatient := 1;
+let curBase  := Base[curPatient];
+let curgamma := gamma[curPatient];
+let curktr   := ktr[curPatient];
+let curslope := slope[curPatient];
+
+let {i in I} x[1,i] := (curBase*kcirc)/curktr;
+let {i in I} x[2,i] := (curBase*kcirc)/curktr;
+let {i in I} x[3,i] := curBase;
+let {i in I} x[4,i] := 0;
+let {i in I} x[5,i] := 0;
+
+
+# Plot names
+let nplots := 1;
+let filename_base := "aml";
+let plotx_name[1] := "Proliferating";
+let plotx_name[2] := "Transient";
+let plotx_name[3] := "Mature";
+let plotx_name[4] := "PK central";
+let plotx_name[5] := "PK peripher";
+let plotw_name[1] := "Ara-C";
+#let {k in X} plotx[k] := 2;
+let plotx[3] := 1;
+let plotw[1] := 1;
+

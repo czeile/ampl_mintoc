@@ -1,0 +1,25 @@
+#!/bin/bash
+
+
+#### - bash script for running computational experiments with rounding algorithms for comparing integer MIOCP solutions based on (POC) and (STO).
+#### - creates figure10.pdf
+#### - computational experiments are based on lotka example with discretization N = 100
+
+
+## 1) Solve relaxed lotka problem for obtaining relaxed control values
+ampl fig10_lotka_create_rel_control_data.run
+
+## 2) Copy relaxed control values into main directory
+cp res/lotkaRelaxed_w.txt fig10_lotkaRelaxed_w.txt
+
+## 3) Preprocessing: reformarting ampl output of relaxed control values for optimization loop
+python3 fig10_create_CIA_TV_control_data.py
+
+## 4) Solve (CIA-TV) problems with varying number of permitted switches. Constructs integer solutions for (MIOCP).
+ampl fig10_lotka_CIA_TV.run
+
+## 5) Apply Sum-Up Rounding with varying number of refinement degrees. Constructs integer solutions for (MIOCP).
+ampl fig10_lotka_SUR_conv.run
+
+## 6) Plot the results into figure10.pdf
+python3 fig10_plot_results_relative_obj.py

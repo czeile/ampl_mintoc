@@ -1,0 +1,86 @@
+#!/bin/bash
+
+##########################################################################
+
+
+# Instance-Name
+name="lotka"
+
+sed -i s/'param nt :='/'#param nt :='/g $name.dat
+sed -i s/'param ntperu'/'#param ntperu'/g $name.dat
+
+sed -i s/'param nt      > 0;'/'#param nt      > 0;'/g ../mintocPre.mod
+sed -i s/'param ntperu'/'#param ntperu'/g ../mintocPre.mod
+
+
+
+Runme()
+{
+	echo "paper.run";
+	echo "paper.run" >> res/tex/log.txt;
+	echo "param nt > 0; let nt := ${ntvalues[j]}; param ntperu > 0; let ntperu :=${ntperuvalues[i]}; param runiter; let runiter :=$runiterr;  include paper.run;"| ampl 	
+	echo "reset;"| ampl
+	echo $((runiterr++))
+}
+
+#Set the desired discretization range:
+
+#ntvalues=(300 600 1200 2400 3600)
+#ntperuvalues=(50)
+
+#ntvalues=(300)
+#ntperuvalues=(50)
+
+#ntvalues=(120 150 300 600 1200 2400 3600 4800 6000 7200) 
+#ntperuvalues=(600 400 200 100 50 20 10) 
+
+ntvalues=(600 1200) 
+#ntvalues=(1200)
+ntperuvalues=(40 20) 
+
+#ntvalues=(6000 7200 8400 9600) 
+#ntperuvalues=(30 20 10)
+
+
+printf 'nt nu RelaxObj Fractionality CompTime CIAObj SwVal CompTime diff SCIAinfObj SwVal CompTime diff SCIA1Obj SwVal CompTime diff GreedyTimeObj SwVal CompTime diff GreedyLambdaObj SwVal CompTime diff ArcRecombObj SwVal CompTime diff CIAReverseObj SwVal CompTime diff SCIAinfReverseObj SwVal CompTime diff SCIA1ReverseObj SwVal CompTime diff GreedyTimeReverseObj SwVal CompTime diff GreedyLambdaReverseObj SwVal CompTime diff ArcRecombReverseObj SwVal CompTime diff' > result.txt;
+printf '\n' >> result.txt;
+
+#printf ''  > res/tex/includeSim.tex;
+#printf '\\newcommand{\\nunt}{%i}\n\\newcommand{\\nuntperu}{%i}\n' ${#ntvalues[@]},   ${#ntperuvalues[@]} > res/tex/includeSim_Dim.tex;
+
+#printf "%.9g %.9g %.9g ", objective, sum{i in IU, o in Omega} (0.5 - abs(wi[o,i] - 0.5)) / no,  _total_solve_time  >> result.txt;
+
+runiterr=1
+echo "param runiter > 0; let runiter:=$runiterr;" | ampl
+
+for ((j=0;j<${#ntvalues[@]};j++)); do
+for ((i=0;i<${#ntperuvalues[@]};i++)); do
+#printf '\\num\def\\ntperu%i{%i}\n' $i, ${ntperuvalues[i]}  >> res/tex/includeSim_Dim.tex;
+dummy=$((ntvalues[j]}/ ntperuvalues[i]))
+printf '%.i %.i', ${ntvalues[j]}, $dummy  >> result.txt;
+	echo
+	echo "***Simulation with nt= ${ntvalues[j]} and ntperu=${ntperuvalues[i]}: ***  "
+	echo
+	#if [ "$i" == "$((${#ntperuvalues[@]}-1))" ]
+    	#	then printf '\\num\def\\nt%i{%i}\n' $j, ${ntvalues[j]}  >> res/tex/includeSim_Dim.tex;
+	#fi
+	Runme
+	printf '\n' >> result.txt;
+done
+done
+
+
+
+#echo "Runall logging" > res/tex/log.txt;
+
+sed -i s/'#param nt :='/'param nt :='/g $name.dat
+sed -i s/'#param ntperu'/'param ntperu'/g $name.dat
+
+sed -i s/'#param nt      > 0;'/'param nt      > 0;'/g ../mintocPre.mod
+sed -i s/'#param ntperu'/'param ntperu'/g ../mintocPre.mod
+
+#cd res/tex
+#pdflatex lotka_nt_post.tex
+#
+#evince lotka_nt_post.pdf
+

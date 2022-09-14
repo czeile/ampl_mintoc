@@ -55,7 +55,7 @@ for {j in Omega} { let mys[j] := 0; }
 let mysum := 0;
 
 # When successive performing of SUR and (scaled) CIA:
- for {ooo in Omega, iii in IU} { let wi[ooo,iii] := alpha[ooo,iii]; }
+# for {ooo in Omega, iii in IU} { let wi[ooo,iii] := alpha[ooo,iii]; }
 
 # Loop on time
 for {iii in IU} { 

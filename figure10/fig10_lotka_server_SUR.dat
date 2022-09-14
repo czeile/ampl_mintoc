@@ -1,0 +1,27 @@
+# ------------------------------------
+# Data: Lotka Volterra fishing problem
+# ------------------------------------
+
+# Dimensions, all other 0 by default
+param nxd := 3;
+param no := 1;
+param nre := 3;
+
+# Problem parameters
+let T := 12.0;
+
+let p[1] := 0.4;
+let p[2] := 0.2;
+let xtilde[1] := 1.0;
+let xtilde[2] := 1.0;
+
+# Plot names
+let nplots := 1;
+let filename_base := "lotka";
+let plotx_name[1] := "Prey";
+let plotx_name[2] := "Predator";
+let plotw_name[1] := "Fishing control";
+let plotx[1] := 1;
+let plotx[2] := 1;
+let plotx[3] := 0;
+let plotw[1] := 1;

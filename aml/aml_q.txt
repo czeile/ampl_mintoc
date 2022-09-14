@@ -1,0 +1,5 @@
+Sim: pat=2 it=0 dosage=333.333 q=1.99844
+Sim: pat=2 it=0 dosage=333.333 q=1.91701
+Sim: pat=3 it=0 dosage=333.333 q=3.30658
+Sim: pat=3 it=0 dosage=333.333 q=3.30658
+Sim: pat=3 it=0 dosage=333.333 q=3.30658

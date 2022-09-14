@@ -41,19 +41,22 @@ include ../saveTrajectory.run;
 include ../printOutput.run;
 
 ##############################
-let mode := "SUR";
-include ../algRound.run;
-let mode := "Simulate";
-include ../solve.run;
-let filename_ext := "SUR";
-include ../plot.run;
-include ../printOutput.run;
+#let mode := "SUR";
+#include ../algRound.run;
+#let mode := "Simulate";
+#include ../solve.run;
+#let filename_ext := "SUR";
+#include ../plot.run;
+#include ../printOutput.run;
 
 ##############################
-let mode := "CIA";
+let mode := "CIATV";
+let sigma_max := 4;
+#let milpsolver := "cplex";
 include ../solveMILP.run;
 let mode := "Simulate";
 include ../solve.run;
 let filename_ext := "MILP";
 include ../plot.run;
+include ../saveTrajectory.run;
 include ../printOutput.run;
